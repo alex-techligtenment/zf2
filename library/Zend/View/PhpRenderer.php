@@ -294,4 +294,13 @@ class PhpRenderer implements Renderer
 
         return $this->getFilterChain()->filter($content); // filter output
     }
+	
+	/**
+	 * Added by Vasilis Raptakis.
+	 * Was required by \Zend\Form\Decorator\Description.php
+	 * Not sure if this what's it's supposed to do.
+	 */
+	public function escape($string) {
+		return strip_tags($string);
+	}
 }

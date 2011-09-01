@@ -2244,7 +2244,10 @@ class Form implements \Iterator, \Countable, \Zend\Validator\Validator
                 $valid = $element->isValid(null, $context) && $valid;
             } else {
                 $valid = $element->isValid($check[$key], $context) && $valid;
-                $data = $this->_dissolveArrayUnsetKey($data, $belongsTo, $key);
+				
+				// The following line was commented out by Vasilis Raptakis -
+				//	because the method does not trim the array correctly.
+                // $data = $this->_dissolveArrayUnsetKey($data, $belongsTo, $key);
             }
         }
         foreach ($this->getSubForms() as $key => $form) {
