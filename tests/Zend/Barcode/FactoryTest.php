@@ -40,8 +40,17 @@ use Zend\Barcode,
  */
 class FactoryTest extends \PHPUnit_Framework_TestCase
 {
+
+    /**
+     * Stores the original set timezone
+     * @var string
+     */
+    private $_originaltimezone;
+
     public function setUp()
     {
+        $this->_originaltimezone = date_default_timezone_get();
+
         // Set timezone to avoid "It is not safe to rely on the system's timezone settings."
         // message if timezone is not set within php.ini
         date_default_timezone_set('GMT');
@@ -53,6 +62,7 @@ class FactoryTest extends \PHPUnit_Framework_TestCase
         Barcode\Barcode::setPluginLoader($loader, Barcode\Barcode::OBJECT);
         $loader = new PrefixPathLoader(array('Zend\Barcode\Renderer' => 'Zend/Barcode/Renderer'));
         Barcode\Barcode::setPluginLoader($loader, Barcode\Barcode::RENDERER);
+        date_default_timezone_set($this->_originaltimezone);
     }
 
     public function testMinimalFactory()
@@ -320,7 +330,7 @@ class FactoryTest extends \PHPUnit_Framework_TestCase
 
     public function testBarcodeRendererFactoryWithUnexistantRenderer()
     {
-        $this->setExpectedException('\Zend\Loader\Exception\PluginLoaderException');
+        $this->setExpectedException('\Zend\Barcode\Exception\InvalidArgumentException');
         $renderer = Barcode\Barcode::makeRenderer('zend', array());
     }
 

@@ -232,4 +232,36 @@ class UploadTest extends \PHPUnit_Framework_TestCase
         $validator->setFiles($files);
         $this->assertEquals($files, $validator->getFiles());
     }
+
+    /**
+     * @group ZF-10738
+     */
+    public function testGetFilesReturnsEmptyArrayWhenFilesSuperglobalIsNull()
+    {
+        $_FILES = NULL;
+        $validator = new File\Upload();
+        $validator->setFiles();
+        $this->assertEquals(array(), $validator->getFiles());
+    }
+
+    /**
+     * @group ZF-10738
+     */
+    public function testGetFilesReturnsEmptyArrayAfterSetFilesIsCalledWithNull()
+    {
+        $validator = new File\Upload();
+        $validator->setFiles(NULL);
+        $this->assertEquals(array(), $validator->getFiles());
+    }
+
+    /**
+     * @group ZF-11258
+     */
+    public function testZF11258()
+    {
+        $validator = new File\Upload();
+        $this->assertFalse($validator->isValid(__DIR__ . '/_files/nofile.mo'));
+        $this->assertTrue(array_key_exists('fileUploadErrorFileNotFound', $validator->getMessages()));
+        $this->assertContains("nofile.mo'", current($validator->getMessages()));
+    }
 }

@@ -43,8 +43,15 @@ class WildfireTest extends \PHPUnit_Framework_TestCase
     protected $_request = null;
     protected $_response = null;
 
+    /**
+     * Stores the original set timezone
+     * @var string
+     */
+    private $_originaltimezone;
+
     public function setUp()
     {
+        $this->_originaltimezone = date_default_timezone_get();
         date_default_timezone_set('America/Los_Angeles');
         Channel\HttpHeaders::destroyInstance();
         FirePhp::destroyInstance();
@@ -55,6 +62,7 @@ class WildfireTest extends \PHPUnit_Framework_TestCase
         Controller\Front::getInstance()->resetInstance();
         Channel\HttpHeaders::destroyInstance();
         FirePhp::destroyInstance();
+        date_default_timezone_set($this->_originaltimezone);
     }
 
     protected function _setupWithFrontController()
@@ -839,15 +847,8 @@ class WildfireTest extends \PHPUnit_Framework_TestCase
                             [FirePhp::PLUGIN_URI]
                             [0];
 
-        if (version_compare(phpversion(), '5.3' , '<')) {
-
-          $this->assertEquals($message,
-                              '[{"Type":"LOG"},{"__className":"ZendTest\\\\Wildfire\\\\TestObject1","public:name":"Name","public:value":"Value","protected:static:protectedStatic":"** Need PHP 5.3 to get value **"}]');
-        } elseif (version_compare(phpversion(), '5.3' , '>=')) {
-
-          $this->assertEquals($message,
+        $this->assertEquals($message,
                               '[{"Type":"LOG"},{"__className":"ZendTest\\\\Wildfire\\\\TestObject1","public:name":"Name","public:value":"Value","protected:static:protectedStatic":"ProtectedStatic"}]');
-        }
 
         $message = $messages[FirePhp::STRUCTURE_URI_FIREBUGCONSOLE]
                             [FirePhp::PLUGIN_URI]
@@ -875,17 +876,8 @@ class WildfireTest extends \PHPUnit_Framework_TestCase
                             [FirePhp::PLUGIN_URI]
                             [0];
 
-        if (version_compare(phpversion(), '5.3' , '<')) {
-
-          $this->assertEquals($message,
-                              '[{"Type":"LOG"},{"__className":"ZendTest\\\\Wildfire\\\\TestObject2","public:public":"Public","private:private":"Private","protected:protected":"Protected","public:static:static":"Static","private:static:staticPrivate":"** Need PHP 5.3 to get value **","protected:static:staticProtected":"** Need PHP 5.3 to get value **"}]');
-
-        } else
-        if (version_compare(phpversion(), '5.3' , '>=')) {
-
-          $this->assertEquals($message,
+        $this->assertEquals($message,
                               '[{"Type":"LOG"},{"__className":"ZendTest\\\\Wildfire\\\\TestObject2","public:public":"Public","private:private":"Private","protected:protected":"Protected","public:static:static":"Static","private:static:staticPrivate":"StaticPrivate","protected:static:staticProtected":"StaticProtected"}]');
-        }
     }
 
     /**

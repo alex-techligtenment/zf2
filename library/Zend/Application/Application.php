@@ -174,7 +174,7 @@ class Application
             $this->setAutoloaderNamespaces($options['autoloadernamespaces']);
         }
 
-        if (!empty($option['autoloaderprefixes'])) {
+        if (!empty($options['autoloaderprefixes'])) {
             $this->setAutoloaderPrefixes($options['autoloaderprefixes']);
         }
 
@@ -422,9 +422,12 @@ class Application
     protected function _loadConfig($file)
     {
         $environment = $this->getEnvironment();
-        $suffix      = strtolower(pathinfo($file, PATHINFO_EXTENSION));
+        $suffix      = pathinfo($file, PATHINFO_EXTENSION);
+        $suffix      = ($suffix === 'dist')
+                     ? pathinfo(basename($file, ".$suffix"), PATHINFO_EXTENSION)
+                     : $suffix;
 
-        switch ($suffix) {
+        switch (strtolower($suffix)) {
             case 'ini':
                 $config = new \Zend\Config\Ini($file, $environment);
                 break;

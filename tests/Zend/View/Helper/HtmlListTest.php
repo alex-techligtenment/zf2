@@ -23,7 +23,9 @@
  * @namespace
  */
 namespace ZendTest\View\Helper;
-use Zend\View\Helper;
+
+use Zend\View\Helper,
+    Zend\View\PhpRenderer as View;
 
 /**
  * @category   Zend
@@ -49,7 +51,7 @@ class HtmlListTest extends \PHPUnit_Framework_TestCase
      */
     protected function setUp()
     {
-        $this->view = new \Zend\View\View();
+        $this->view   = new View();
         $this->helper = new Helper\HtmlList();
         $this->helper->setView($this->view);
     }
@@ -118,7 +120,7 @@ class HtmlListTest extends \PHPUnit_Framework_TestCase
     }
 
     /*
-     * @see ZF-5018
+     * @group ZF-5018
      */
     public function testMakeNestedUnorderedList()
     {
@@ -134,7 +136,7 @@ class HtmlListTest extends \PHPUnit_Framework_TestCase
     }
 
     /*
-     * @see ZF-5018
+     * @group ZF-5018
      */
     public function testMakeNestedDeepUnorderedList()
     {
@@ -177,7 +179,7 @@ class HtmlListTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     * @see ZF-2527
+     * @group ZF-2527
      */
     public function testEscapeFlagHonoredForMultidimensionalLists()
     {
@@ -191,8 +193,8 @@ class HtmlListTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     * @see ZF-2527
-     * Added the s modifier to match newlines after @see ZF-5018
+     * @group ZF-2527
+     * Added the s modifier to match newlines after ZF-5018
      */
     public function testAttribsPassedIntoMultidimensionalLists()
     {
@@ -207,7 +209,7 @@ class HtmlListTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     * @see ZF-2870
+     * @group ZF-2870
      */
     public function testEscapeFlagShouldBePassedRecursively()
     {

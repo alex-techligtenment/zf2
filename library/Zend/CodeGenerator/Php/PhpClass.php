@@ -48,7 +48,7 @@ class PhpClass extends AbstractPhp
      * @var string
      */
     protected $_namespaceName = null;
-    
+
     /**
      * @var \Zend\CodeGenerator\Php\PhpDocblock
      */
@@ -80,6 +80,11 @@ class PhpClass extends AbstractPhp
     protected $_properties = null;
 
     /**
+     * @var array Array of constants
+     */
+    protected $_constants = null;
+
+    /**
      * @var array Array of methods
      */
     protected $_methods = null;
@@ -102,14 +107,14 @@ class PhpClass extends AbstractPhp
         }
 
         $class->setAbstract($reflectionClass->isAbstract());
-        
+
         // set the namespace
         if ($reflectionClass->inNamespace()) {
             $class->setNamespaceName($reflectionClass->getNamespaceName());
         }
 
         $class->setName($reflectionClass->getName());
-        
+
         if ($parentClass = $reflectionClass->getParentClass()) {
             $class->setExtendedClass($parentClass->getName());
             $interfaces = array_diff($reflectionClass->getInterfaces(), $parentClass->getInterfaces());
@@ -145,7 +150,7 @@ class PhpClass extends AbstractPhp
 
     /**
      * setPhpFile()
-     * 
+     *
      * @param Zend\CodeGenerator\Php\PhpFile $phpFile
      */
     public function setPhpFile(PhpFile $phpFile)
@@ -153,10 +158,10 @@ class PhpClass extends AbstractPhp
         $this->_phpFile = $phpFile;
         return $this;
     }
-    
+
     /**
      * getPhpFile()
-     * 
+     *
      * @return Zend\CodeGenerator\Php\PhpFile
      */
     public function getPhpFile()
@@ -296,7 +301,7 @@ class PhpClass extends AbstractPhp
      * @param array $implementedInterfaces
      * @return \Zend\CodeGenerator\Php\PhpClass
      */
-    public function setImplementedInterfaces(Array $implementedInterfaces)
+    public function setImplementedInterfaces(array $implementedInterfaces)
     {
         $this->_implementedInterfaces = $implementedInterfaces;
         return $this;
@@ -318,10 +323,25 @@ class PhpClass extends AbstractPhp
      * @param array $properties
      * @return \Zend\CodeGenerator\Php\PhpClass
      */
-    public function setProperties(Array $properties)
+    public function setProperties(array $properties)
     {
         foreach ($properties as $property) {
             $this->setProperty($property);
+        }
+
+        return $this;
+    }
+
+    /**
+     * setConstants()
+     *
+     * @param array $constants
+     * @return \Zend\CodeGenerator\Php\Class
+     */
+    public function setConstants(Array $constants)
+    {
+        foreach ($constants as $const) {
+            $this->setConstant($const);
         }
 
         return $this;
@@ -337,18 +357,47 @@ class PhpClass extends AbstractPhp
     {
         if (is_array($property)) {
             $property = new PhpProperty($property);
-            $propertyName = $property->getName();
-        } elseif ($property instanceof PhpProperty) {
-            $propertyName = $property->getName();
-        } else {
+        } elseif (!$property instanceof PhpProperty) {
             throw new Exception\InvalidArgumentException('setProperty() expects either an array of property options or an instance of Zend_CodeGenerator_Php_Property');
         }
+        $propertyName = $property->getName();
 
+        if ($property->isConst()) {
+            return $this->setConstant($property);
+        }
         if (isset($this->_properties[$propertyName])) {
             throw new Exception\InvalidArgumentException('A property by name ' . $propertyName . ' already exists in this class.');
         }
 
         $this->_properties[$propertyName] = $property;
+        return $this;
+    }
+
+    /**
+     * setConstant()
+     *
+     * @param array|\Zend\CodeGenerator\Php\PhpProperty $const
+     * @return Zend\CodeGenerator\Php\PhpClass
+     */
+    public function setConstant($const)
+    {
+        if (is_array($const)) {
+            $const = new PhpProperty($const);
+            $constName = $const->getName();
+        } elseif ($const instanceof PhpProperty) {
+            $constName = $const->getName();
+        } else {
+            throw new Exception\InvalidArgumentException('setConstant() expects either an array of property options or an instance of Zend_CodeGenerator_Php_Property');
+        }
+
+        if (!$const->isConst()) {
+            throw new Exception\InvalidArgumentException('setProperty() expects argument to define a constant');
+        }
+        if (isset($this->_constants[$constName])) {
+            throw new Exception\InvalidArgumentException('A constant by name ' . $constName . ' already exists in this class.');
+        }
+
+        $this->_constants[$constName] = $const;
         return $this;
     }
 
@@ -363,6 +412,16 @@ class PhpClass extends AbstractPhp
     }
 
     /**
+     * getConstants()
+     *
+     * @return array
+     */
+    public function getConstants()
+    {
+        return $this->_constants;
+    }
+
+    /**
      * getProperty()
      *
      * @param string $propertyName
@@ -373,6 +432,22 @@ class PhpClass extends AbstractPhp
         foreach ($this->_properties as $property) {
             if ($property->getName() == $propertyName) {
                 return $property;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * getConstant()
+     *
+     * @param string $constName
+     * @return \Zend\CodeGenerator\Php\PhpProperty
+     */
+    public function getConstant($constName)
+    {
+        foreach ($this->_constants as $const) {
+            if ($const->getName() == $constName) {
+                return $const;
             }
         }
         return false;
@@ -395,12 +470,23 @@ class PhpClass extends AbstractPhp
      * @param array $methods
      * @return \Zend\CodeGenerator\Php\PhpClass
      */
-    public function setMethods(Array $methods)
+    public function setMethods(array $methods)
     {
         foreach ($methods as $method) {
             $this->setMethod($method);
         }
         return $this;
+    }
+
+    /**
+     * hasConstant()
+     *
+     * @param string $constName
+     * @return bool
+     */
+    public function hasConstant($constName)
+    {
+        return isset($this->_constants[$constName]);
     }
 
     /**
@@ -413,12 +499,10 @@ class PhpClass extends AbstractPhp
     {
         if (is_array($method)) {
             $method = new PhpMethod($method);
-            $methodName = $method->getName();
-        } elseif ($method instanceof PhpMethod) {
-            $methodName = $method->getName();
-        } else {
+        } elseif (!$method instanceof PhpMethod) {
             throw new Exception\InvalidArgumentException('setMethod() expects either an array of method options or an instance of Zend\CodeGenerator\Php\Method');
         }
+        $methodName = $method->getName();
 
         if (isset($this->_methods[$methodName])) {
             throw new Exception\InvalidArgumentException('A method by name ' . $methodName . ' already exists in this class.');
@@ -482,6 +566,12 @@ class PhpClass extends AbstractPhp
             }
         }
 
+        foreach ($this->_constants as $constant) {
+            if ($constant->isSourceDirty()) {
+                return true;
+            }
+        }
+
         foreach ($this->_methods as $method) {
             if ($method->isSourceDirty()) {
                 return true;
@@ -534,6 +624,13 @@ class PhpClass extends AbstractPhp
 
         $output .= self::LINE_FEED . '{' . self::LINE_FEED . self::LINE_FEED;
 
+        $constants = $this->getConstants();
+        if (!empty($constants)) {
+            foreach ($constants as $const) {
+                $output .= $const->generate() . self::LINE_FEED . self::LINE_FEED;
+            }
+        }
+
         $properties = $this->getProperties();
         if (!empty($properties)) {
             foreach ($properties as $property) {
@@ -560,6 +657,7 @@ class PhpClass extends AbstractPhp
     protected function _init()
     {
         $this->_properties = new PhpMember\MemberContainer(PhpMember\MemberContainer::TYPE_PROPERTY);
+        $this->_constants = new PhpMember\MemberContainer(PhpMember\MemberContainer::TYPE_PROPERTY);
         $this->_methods = new PhpMember\MemberContainer(PhpMember\MemberContainer::TYPE_METHOD);
     }
 

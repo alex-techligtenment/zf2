@@ -23,7 +23,7 @@
  * @namespace
  */
 namespace ZendTest\Captcha;
-use Zend\View\View;
+use Zend\View\PhpRenderer as View;
 
 /**
  * @category   Zend
@@ -67,7 +67,6 @@ class FigletTest extends \PHPUnit_Framework_TestCase
     public function getView()
     {
         $view = new View();
-        $view->addHelperPath(__DIR__ . '/../../../../library/Zend/View/Helper');
         return $view;
     }
 
@@ -87,7 +86,6 @@ class FigletTest extends \PHPUnit_Framework_TestCase
     }
 
     /*
-     * @see ZF-8268
      * @group ZF-8268
      */
     public function testLabelIdIsCorrect()
@@ -100,7 +98,7 @@ class FigletTest extends \PHPUnit_Framework_TestCase
         $expect = sprintf('for="comment-%s-input"', $this->element->getName());
         $this->assertRegexp("/<label [^>]*?$expect/", $html, $html);
     }
-    
+
     public function testTimeoutPopulatedByDefault()
     {
         $ttl = $this->captcha->getTimeout();
@@ -269,7 +267,7 @@ class FigletTest extends \PHPUnit_Framework_TestCase
         $input = array("id" => $this->captcha->getId(), "input" => $this->captcha->getWord());
         $this->assertTrue($this->element->isValid($input));
     }
-    
+
     /**
      * @group ZF-5728
      */

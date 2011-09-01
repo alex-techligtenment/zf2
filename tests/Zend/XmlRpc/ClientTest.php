@@ -73,7 +73,7 @@ class ClientTest extends \PHPUnit_Framework_TestCase
     {
         $xmlrpcClient = new Client('http://foo');
         $httpClient = $xmlrpcClient->getHttpClient();
-        $this->assertType('Zend\\Http\\Client', $httpClient);
+        $this->assertInstanceOf('Zend\\Http\\Client', $httpClient);
         $this->assertSame($httpClient, $xmlrpcClient->getHttpClient());
     }
 
@@ -107,8 +107,8 @@ class ClientTest extends \PHPUnit_Framework_TestCase
         $this->setServerResponseTo(true);
         $this->xmlrpcClient->call('foo');
 
-        $this->assertType('Zend\\XmlRpc\\Request', $this->xmlrpcClient->getLastRequest());
-        $this->assertType('Zend\\XmlRpc\\Response', $this->xmlrpcClient->getLastResponse());
+        $this->assertInstanceOf('Zend\\XmlRpc\\Request', $this->xmlrpcClient->getLastRequest());
+        $this->assertInstanceOf('Zend\\XmlRpc\\Response', $this->xmlrpcClient->getLastResponse());
     }
 
     public function testSuccessfulRpcMethodCallWithNoParameters()
@@ -155,7 +155,7 @@ class ClientTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     * @see ZF-2090
+     * @group ZF-2090
      */
     public function testSuccessfullyDetectsEmptyArrayParameterAsArray()
     {
@@ -176,9 +176,7 @@ class ClientTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     * @see ZF-1412
-     *
-     * @return void
+     * @group ZF-1412
      */
     public function testSuccessfulRpcMethodCallWithMixedDateParameters()
     {
@@ -338,8 +336,7 @@ class ClientTest extends \PHPUnit_Framework_TestCase
 
     public function testGetProxyReturnsServerProxy()
     {
-        $class = 'Zend\\XmlRpc\\Client\\ServerProxy';
-        $this->assertType($class, $this->xmlrpcClient->getProxy());
+        $this->assertInstanceOf('Zend\\XmlRpc\\Client\\ServerProxy', $this->xmlrpcClient->getProxy());
     }
 
     public function testRpcMethodCallsThroughServerProxy()
@@ -392,7 +389,7 @@ class ClientTest extends \PHPUnit_Framework_TestCase
     {
         $xmlrpcClient = new Client('http://foo');
         $introspector = $xmlrpcClient->getIntrospector();
-        $this->assertType('Zend\\XmlRpc\\Client\\ServerIntrospection', $introspector);
+        $this->assertInstanceOf('Zend\\XmlRpc\\Client\\ServerIntrospection', $introspector);
         $this->assertSame($introspector, $xmlrpcClient->getIntrospector());
     }
 
@@ -647,16 +644,16 @@ class ClientTest extends \PHPUnit_Framework_TestCase
         $this->assertTrue($this->xmlrpcClient->call('method'));
         $this->assertSame($expectedUserAgent, $this->httpClient->getHeader('user-agent'));
     }
-    
+
     /**
      * @group ZF-8478
      */
     public function testPythonSimpleXMLRPCServerWithUnsupportedMethodSignatures()
     {
-    	$introspector = new Client\ServerIntrospection(
+        $introspector = new Client\ServerIntrospection(
             new TestClient('http://localhost/')
             );
-        
+
         $this->setExpectedException('Zend\XmlRpc\Client\Exception\IntrospectException', 'Invalid signature for method "add"');
         $signature = $introspector->getMethodSignature('add');
     }
@@ -727,9 +724,9 @@ class PythonSimpleXMLRPCServerWithUnsupportedIntrospection extends Client\Server
 /** related to ZF-8478 */
 class TestClient extends Client {
     public function getProxy($namespace = '') {
-    	if (empty($this->_proxyCache[$namespace])) {
-    	    $this->_proxyCache[$namespace] = new PythonSimpleXMLRPCServerWithUnsupportedIntrospection($this, $namespace);
-    	}
+        if (empty($this->_proxyCache[$namespace])) {
+            $this->_proxyCache[$namespace] = new PythonSimpleXMLRPCServerWithUnsupportedIntrospection($this, $namespace);
+        }
         return parent::getProxy($namespace);
     }
 }

@@ -508,7 +508,7 @@ class NotEmptyTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     * @see ZF-3236
+     * @group ZF-3236
      */
     public function testStringWithZeroShouldNotBeTreatedAsEmpty()
     {
@@ -578,6 +578,30 @@ class NotEmptyTest extends \PHPUnit_Framework_TestCase
 
         $object = new ClassTest3();
         $this->assertFalse($valid->isValid($object));
+    }
+
+    /**
+     * @group ZF-11566
+     */
+    public function testArrayConfigNotationWithoutKey()
+    {
+        $filter = new Validator\NotEmpty(
+            array('zero', 'string', 'boolean')
+        );
+
+        $this->assertFalse($filter->isValid(false));
+        $this->assertTrue($filter->isValid(true));
+        $this->assertTrue($filter->isValid(0));
+        $this->assertTrue($filter->isValid(1));
+        $this->assertTrue($filter->isValid(0.0));
+        $this->assertTrue($filter->isValid(1.0));
+        $this->assertFalse($filter->isValid(''));
+        $this->assertTrue($filter->isValid('abc'));
+        $this->assertFalse($filter->isValid('0'));
+        $this->assertTrue($filter->isValid('1'));
+        $this->assertTrue($filter->isValid(array()));
+        $this->assertTrue($filter->isValid(array('xxx')));
+        $this->assertTrue($filter->isValid(null));
     }
 }
 

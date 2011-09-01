@@ -137,7 +137,7 @@ class EmailAddressTest extends \PHPUnit_Framework_TestCase
         $this->assertContains('quoted-string', current($messages));
 
         $this->assertContains('Some User', next($messages));
-        $this->assertContains('no valid local part', current($messages));
+        $this->assertContains('not a valid local part', current($messages));
     }
 
     /**
@@ -151,7 +151,7 @@ class EmailAddressTest extends \PHPUnit_Framework_TestCase
 
         $messages = $this->_validator->getMessages();
 
-        $this->assertType('array', $messages);
+        $this->assertInternalType('array', $messages);
         $this->assertEquals(0, count($messages));
     }
 
@@ -165,7 +165,7 @@ class EmailAddressTest extends \PHPUnit_Framework_TestCase
         $this->assertFalse($this->_validator->isValid('username@ example . com'));
         $messages = $this->_validator->getMessages();
         $this->assertThat(count($messages), $this->greaterThanOrEqual(1));
-        $this->assertContains('no valid hostname', current($messages));
+        $this->assertContains('not a valid hostname', current($messages));
     }
 
     /**
@@ -200,7 +200,7 @@ class EmailAddressTest extends \PHPUnit_Framework_TestCase
         $this->assertFalse($this->_validator->isValid('User Name <username@example.com>'));
         $messages = $this->_validator->getMessages();
         $this->assertThat(count($messages), $this->greaterThanOrEqual(3));
-        $this->assertContains('no valid hostname', current($messages));
+        $this->assertContains('not a valid hostname', current($messages));
         $this->assertContains('cannot match TLD', next($messages));
         $this->assertContains('does not appear to be a valid local network name', next($messages));
     }
@@ -368,7 +368,7 @@ class EmailAddressTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     * @see ZF-2861
+     * @group ZF-2861
      */
     public function testHostnameValidatorMessagesShouldBeTranslated()
     {
@@ -400,7 +400,7 @@ class EmailAddressTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     * @see ZF-4888
+     * @group ZF-4888
      */
     public function testEmailsExceedingLength()
     {
@@ -414,7 +414,7 @@ class EmailAddressTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     * @see ZF-4352
+     * @group ZF-4352
      */
     public function testNonStringValidation()
     {
@@ -422,7 +422,7 @@ class EmailAddressTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     * @see ZF-7490
+     * @group ZF-7490
      */
     public function testSettingHostnameMessagesThroughEmailValidator()
     {
@@ -504,18 +504,6 @@ class EmailAddressTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     * Testing validateMxSupported
-     */
-    public function testValidateMxSupported()
-    {
-        if (function_exists('getmxrr')) {
-            $this->assertTrue($this->_validator->validateMxSupported());
-        } else {
-            $this->assertFalse($this->_validator->validateMxSupported());
-        }
-    }
-
-    /**
      * Testing getValidateMx
      */
     public function testGetValidateMx()
@@ -558,5 +546,25 @@ class EmailAddressTest extends \PHPUnit_Framework_TestCase
         if (strstr($errstr, 'deprecated')) {
             $this->multipleOptionsDetected = true;
         }
+    }
+
+    /**
+     * @group ZF-11222
+     * @group ZF-11451
+     */
+    public function testEmailAddressesWithTrailingDotInHostPartAreRejected()
+    {
+        $this->assertFalse($this->_validator->isValid('example@gmail.com.'));
+        $this->assertFalse($this->_validator->isValid('test@test.co.'));
+        $this->assertFalse($this->_validator->isValid('test@test.co.za.'));
+    }
+
+    /**
+     * @group ZF-11239
+     */
+    public function testNotSetHostnameValidator()
+    {
+        $hostname = $this->_validator->getHostnameValidator();
+        $this->assertTrue($hostname instanceof Validator\Hostname);
     }
 }

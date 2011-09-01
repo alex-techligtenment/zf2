@@ -53,12 +53,12 @@ class Dojo extends AbstractViewHelper
     /**#@-*/
 
     /**
-     * @var \Zend\View\ViewEngine
+     * @var \Zend\View\Renderer
      */
     public $view;
 
     /**
-     * @var \Zend\Dojo\View\Helper\DojoContainer
+     * @var \Zend\Dojo\View\Helper\Dojo\Container
      */
     protected $_container;
 
@@ -89,7 +89,7 @@ class Dojo extends AbstractViewHelper
     /**
      * Set view object
      *
-     * @param  Zend\View\ViewEngine $view
+     * @param  Zend\View\Renderer $view
      * @return void
      */
     public function setView(View $view)
@@ -101,7 +101,7 @@ class Dojo extends AbstractViewHelper
     /**
      * Return dojo container
      *
-     * @return \Zend\Dojo\View\Helper\DojoContainer
+     * @return \Zend\Dojo\View\Helper\Dojo\Container
      */
     public function direct()
     {

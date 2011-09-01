@@ -31,7 +31,8 @@ use Zend\Barcode,
     Zend\Barcode\Object\Exception\RuntimeException,
     Zend\Barcode\Object\Exception\InvalidArgumentException,
     Zend\Barcode\Object\Exception\BarcodeValidationException,
-    Zend\Barcode\Object\Exception\OutOfRangeException;
+    Zend\Barcode\Object\Exception\OutOfRangeException,
+    Zend\Barcode\Object\Exception\ExtensionNotLoadedException;
 
 /**
  * Class for generate Barcode
@@ -386,7 +387,7 @@ abstract class AbstractObject implements Barcode\BarcodeObject
     /**
      * Set factor applying to
      * thinBarWidth - thickBarWidth - barHeight - fontSize
-     * @param integer $value
+     * @param float $value
      * @return \Zend\Barcode\BarcodeObject
      * @throw \Zend\Barcode\Object\Exception
      */

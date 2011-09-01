@@ -273,8 +273,8 @@ class HostnameTest extends \PHPUnit_Framework_TestCase
     /**
      * Test changed with ZF-6676, as IP check is only involved when IP patterns match
      *
-     * @see ZF-2861
-     * @see ZF-6676
+     * @group ZF-2861
+     * @group ZF-6676
      */
     public function testValidatorMessagesShouldBeTranslated()
     {
@@ -299,7 +299,7 @@ class HostnameTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     * @see ZF-6033
+     * @group ZF-6033
      */
     public function testNumberNames()
     {
@@ -318,7 +318,7 @@ class HostnameTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     * @see ZF-6133
+     * @group ZF-6133
      */
     public function testPunycodeDecoding()
     {
@@ -355,7 +355,7 @@ class HostnameTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     * @see ZF-7277
+     * @group ZF-7277
      */
     public function testDifferentIconvEncoding()
     {
@@ -397,5 +397,44 @@ class HostnameTest extends \PHPUnit_Framework_TestCase
                 $this->assertEquals($element[1], $validator->isValid($input), implode("\n", $validator->getMessages()) . $input);
             }
         }
+    }
+
+    /**
+     * Ensure that a trailing "." in a local hostname is permitted
+     *
+     * @group ZF-6363
+     */
+    public function testTrailingDot()
+    {
+        $valuesExpected = array(
+            array(Hostname::ALLOW_ALL, true, array('example.', 'example.com.', '~ex%20ample.')),
+            array(Hostname::ALLOW_ALL, false, array('example..')),
+            array(Hostname::ALLOW_ALL, true, array('1.2.3.4.')),
+            array(Hostname::ALLOW_DNS, false, array('example..', '~ex%20ample..')),
+            array(Hostname::ALLOW_LOCAL, true, array('example.', 'example.com.')),
+        );
+
+        foreach ($valuesExpected as $element) {
+            $validator = new Hostname($element[0]);
+            foreach ($element[2] as $input) {
+                $this->assertEquals($element[1], $validator->isValid($input), implode("\n", $validator->getMessages()) . $input);
+            }
+        }
+    }
+
+    /**
+     * @group ZF-11334
+     */
+    public function testSupportsIpv6AddressesWhichContainHexDigitF()
+    {
+        $validator = new Hostname(Hostname::ALLOW_ALL);
+
+        $this->assertTrue($validator->isValid('FEDC:BA98:7654:3210:FEDC:BA98:7654:3210'));
+        $this->assertTrue($validator->isValid('1080:0:0:0:8:800:200C:417A'));
+        $this->assertTrue($validator->isValid('3ffe:2a00:100:7031::1'));
+        $this->assertTrue($validator->isValid('1080::8:800:200C:417A'));
+        $this->assertTrue($validator->isValid('::192.9.5.5'));
+        $this->assertTrue($validator->isValid('::FFFF:129.144.52.38'));
+        $this->assertTrue($validator->isValid('2010:836B:4179::836B:4179'));
     }
 }

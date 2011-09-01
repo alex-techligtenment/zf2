@@ -87,7 +87,7 @@ class PdoMysqlTest extends AbstractPdoTest
             $stmt = $this->_db->query($select);
             $result2 = $stmt->fetchAll();
         } catch (\Exception $e) {
-            $this->assertType('Zend\Db\Statement\Exception', $e,
+            $this->assertInstanceOf('Zend\Db\Statement\Exception', $e,
                 'Expecting object of type Zend_Db_Statement_Exception, got '.get_class($e));
             $this->fail('Unexpected exception '.get_class($e).' received: '.$e->getMessage());
         }
@@ -98,7 +98,7 @@ class PdoMysqlTest extends AbstractPdoTest
     /**
      * Ensures that driver_options are properly passed along to PDO
      *
-     * @see    http://framework.zend.com/issues/browse/ZF-285
+     * @group  ZF-285
      * @return void
      */
     public function testAdapterDriverOptions()
