@@ -15,7 +15,7 @@
  * @category   Zend
  * @package    Zend_Form
  * @subpackage Decorator
- * @copyright  Copyright (c) 2005-2011 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2012 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
  */
 
@@ -38,7 +38,7 @@ use Zend\Form,
  * @category   Zend
  * @package    Zend_Form
  * @subpackage Decorator
- * @copyright  Copyright (c) 2005-2011 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2012 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
  */
 class FormErrors extends AbstractDecorator
@@ -442,7 +442,7 @@ class FormErrors extends AbstractDecorator
         $custom = $form->getCustomMessages();
         if ($this->getShowCustomFormErrors() && count($custom)) {
             $content .= $this->getMarkupListItemStart()
-                     .  $view->plugin('formErrors')->direct($custom, $this->getOptions())
+                     .  $view->formErrors($custom, $this->getOptions())
                      .  $this->getMarkupListItemEnd();
         }
         foreach ($form->getElementsAndSubFormsOrdered() as $subitem) {
@@ -452,7 +452,7 @@ class FormErrors extends AbstractDecorator
                     $subitem->setView($view);
                     $content .= $this->getMarkupListItemStart()
                              .  $this->renderLabel($subitem, $view)
-                             .  $view->plugin('formErrors')->direct($messages, $this->getOptions())
+                             .  $view->formErrors($messages, $this->getOptions())
                              .  $this->getMarkupListItemEnd();
                 }
             } elseif ($subitem instanceof Form\Form && !$this->ignoreSubForms()) {

@@ -15,15 +15,14 @@
  * @category   Zend
  * @package    Zend\Service
  * @subpackage Rackspace
- * @copyright  Copyright (c) 2005-2011 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2012 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
  */
 
 namespace Zend\Service\Rackspace;
 
 use Zend\Http\Client as HttpClient,
-    Zend\Validator\Ip as IpValidator,
-    Zend\Service\Rackspace\Exception;
+    Zend\Validator\Ip as IpValidator;
 
 class Servers extends Rackspace
 {
@@ -59,8 +58,8 @@ class Servers extends Rackspace
         if ($details) {
             $url.= '/detail';
         } 
-        $result= $this->httpCall($this->getManagementUrl().$url,HttpClient::GET);
-        $status= $result->getStatus();
+        $result= $this->httpCall($this->getManagementUrl().$url,'GET');
+        $status= $result->getStatusCode();
         switch ($status) {
             case '200' : 
             case '203' : // break intentionally omitted   
@@ -91,10 +90,10 @@ class Servers extends Rackspace
     public function getServer($id) 
     {
         if (empty($id)) {
-            throw new Exception\InvalidArgumentException(self::ERROR_PARAM_NO_ID);
+            throw new Exception\InvalidArgumentException(self::ERROR_PARAM_NO_SERVERID);
         }
-        $result= $this->httpCall($this->getManagementUrl().'/servers/'.rawurlencode($id),HttpClient::GET);
-        $status= $result->getStatus();
+        $result= $this->httpCall($this->getManagementUrl().'/servers/'.rawurlencode($id),'GET');
+        $status= $result->getStatusCode();
         switch ($status) {
             case '200' : 
             case '203' : // break intentionally omitted   
@@ -170,10 +169,11 @@ class Servers extends Rackspace
                 );
             }
         }
-        $result = $this->httpCall($this->getManagementUrl().'/servers',HttpClient::POST,
+        $result = $this->httpCall($this->getManagementUrl().'/servers','POST',
                 null,null,json_encode(array ('server' => $data)));
-        $status = $result->getStatus();
+        $status = $result->getStatusCode();
         switch ($status) {
+            case '200' :
             case '202' : // break intentionally omitted   
                 $server = json_decode($result->getBody(),true);
                 return new Servers\Server($this,$server['server']);
@@ -219,9 +219,9 @@ class Servers extends Rackspace
         if (!empty($password)) {
             $data['adminPass']= $password;
         }
-        $result = $this->httpCall($this->getManagementUrl().'/servers/'.rawurlencode($id),HttpClient::PUT,
+        $result = $this->httpCall($this->getManagementUrl().'/servers/'.rawurlencode($id),'PUT',
                 null,null,json_encode(array('server' => $data)));
-        $status = $result->getStatus();
+        $status = $result->getStatusCode();
         switch ($status) {
             case '204' : // break intentionally omitted   
                 return true;
@@ -292,8 +292,8 @@ class Servers extends Rackspace
         if (empty($id)) {
             throw new Exception\InvalidArgumentException('You must specify the ID of the server');
         }
-        $result = $this->httpCall($this->getManagementUrl().'/servers/'.rawurlencode($id),HttpClient::DELETE);
-        $status = $result->getStatus();
+        $result = $this->httpCall($this->getManagementUrl().'/servers/'.rawurlencode($id),'DELETE');
+        $status = $result->getStatusCode();
         switch ($status) {
             case '202' : // break intentionally omitted   
                 return true;
@@ -389,9 +389,9 @@ class Servers extends Rackspace
             'sharedIpGroupId' => (integer) $groupId,
             'configureServer' => $configure
         );
-        $result = $this->httpCall($this->getManagementUrl().'/servers/'.rawurlencode($id).'/ips/public/'.rawurlencode($ip),HttpClient::PUT,
+        $result = $this->httpCall($this->getManagementUrl().'/servers/'.rawurlencode($id).'/ips/public/'.rawurlencode($ip),'PUT',
                 null,null,json_encode(array('shareIp' => $data)));
-        $status = $result->getStatus();
+        $status = $result->getStatusCode();
         switch ($status) {
             case '202' : // break intentionally omitted   
                 return true;
@@ -434,8 +434,8 @@ class Servers extends Rackspace
             throw new Exception\InvalidArgumentException("The parameter $ip specified is not a valid IP address");
         }
         $result = $this->httpCall($this->getManagementUrl().'/servers/'.rawurlencode($id).'/ips/public/'.rawurlencode($ip),
-                HttpClient::DELETE);
-        $status = $result->getStatus();
+                'DELETE');
+        $status = $result->getStatusCode();
         switch ($status) {
             case '202' : // break intentionally omitted   
                 return true;
@@ -484,9 +484,10 @@ class Servers extends Rackspace
             )
         );
         $result = $this->httpCall($this->getManagementUrl().'/servers/'.rawurlencode($id).'/action',
-                                  HttpClient::POST, null, null, json_encode($data));
-        $status = $result->getStatus();
+                                  'POST', null, null, json_encode($data));
+        $status = $result->getStatusCode();
         switch ($status) {
+            case '200' :
             case '202' : // break intentionally omitted   
                 return true;
             case '503' :
@@ -535,8 +536,8 @@ class Servers extends Rackspace
             )
         );
         $result = $this->httpCall($this->getManagementUrl().'/servers/'.rawurlencode($id).'/action',
-                                  HttpClient::POST, null, null, json_encode($data));
-        $status = $result->getStatus();
+                                  'POST', null, null, json_encode($data));
+        $status = $result->getStatusCode();
         switch ($status) {
             case '202' : // break intentionally omitted   
                 return true;
@@ -589,8 +590,8 @@ class Servers extends Rackspace
             )
         );
         $result = $this->httpCall($this->getManagementUrl().'/servers/'.rawurlencode($id).'/action',
-                                  HttpClient::POST, null, null, json_encode($data));
-        $status = $result->getStatus();
+                                  'POST', null, null, json_encode($data));
+        $status = $result->getStatusCode();
         switch ($status) {
             case '202' : // break intentionally omitted   
                 return true;
@@ -640,8 +641,8 @@ class Servers extends Rackspace
             'confirmResize' => null
         );
         $result = $this->httpCall($this->getManagementUrl().'/servers/'.rawurlencode($id).'/action',
-                                  HttpClient::POST, null, null, json_encode($data));
-        $status = $result->getStatus();
+                                  'POST', null, null, json_encode($data));
+        $status = $result->getStatusCode();
         switch ($status) {
             case '204' : // break intentionally omitted   
                 return true;
@@ -691,8 +692,8 @@ class Servers extends Rackspace
             'revertResize' => null
         );
         $result = $this->httpCall($this->getManagementUrl().'/servers/'.rawurlencode($id).'/action',
-                                  HttpClient::POST, null, null, json_encode($data));
-        $status = $result->getStatus();
+                                  'POST', null, null, json_encode($data));
+        $status = $result->getStatusCode();
         switch ($status) {
             case '202' : // break intentionally omitted   
                 return true;
@@ -730,18 +731,21 @@ class Servers extends Rackspace
      * @return array|boolean
      */
     public function listFlavors($details=false)
-    {
+    { 
         $url= '/flavors';
         if ($details) {
             $url.= '/detail';
-        } 
-        $result= $this->httpCall($this->getManagementUrl().$url,HttpClient::GET);
-        $status= $result->getStatus();
+        }
+        $result= $this->httpCall($this->getManagementUrl().$url,'GET');
+        $status= $result->getStatusCode();
         switch ($status) {
             case '200' : 
             case '203' : // break intentionally omitted   
                 $flavors= json_decode($result->getBody(),true);
-                return $flavors['flavors'];
+                if (isset($flavors['flavors'])) {
+                    return $flavors['flavors'];
+                }
+                break;
             case '503' :
                 $this->errorMsg= self::ERROR_SERVICE_UNAVAILABLE;
                 break;
@@ -769,13 +773,16 @@ class Servers extends Rackspace
         if (empty($flavorId)) {
             throw new Exception\InvalidArgumentException('You didn\'t specified the new flavorId of the server');
         }
-        $result= $this->httpCall($this->getManagementUrl().'/flavors/'.rawurlencode($flavorId),HttpClient::GET);
-        $status= $result->getStatus();
+        $result= $this->httpCall($this->getManagementUrl().'/flavors/'.rawurlencode($flavorId),'GET');
+        $status= $result->getStatusCode();
         switch ($status) {
             case '200' : 
             case '203' : // break intentionally omitted   
                 $flavor= json_decode($result->getBody(),true);
-                return $flavor['flavor'];
+                if (isset($flavor['flavor'])) {
+                    return $flavor['flavor'];
+                }
+                break;
             case '503' :
                 $this->errorMsg= self::ERROR_SERVICE_UNAVAILABLE;
                 break;
@@ -804,8 +811,8 @@ class Servers extends Rackspace
         if ($details) {
             $url.= '/detail';
         } 
-        $result= $this->httpCall($this->getManagementUrl().$url,HttpClient::GET);
-        $status= $result->getStatus();
+        $result= $this->httpCall($this->getManagementUrl().$url,'GET');
+        $status= $result->getStatusCode();
         switch ($status) {
             case '200' : 
             case '203' : // break intentionally omitted   
@@ -835,8 +842,11 @@ class Servers extends Rackspace
      */
     public function getImage($id)
     {
-        $result= $this->httpCall($this->getManagementUrl().'/images/'.rawurlencode($id),HttpClient::GET);
-        $status= $result->getStatus();
+        if (empty($id)) {
+            throw new Exception\InvalidArgumentException(self::ERROR_PARAM_NO_SERVERID);
+        }
+        $result= $this->httpCall($this->getManagementUrl().'/images/'.rawurlencode($id),'GET');
+        $status= $result->getStatusCode();
         switch ($status) {
             case '200' : 
             case '203' : // break intentionally omitted   
@@ -882,12 +892,12 @@ class Servers extends Rackspace
                 'name'     => $name
             )
         );
-        $result = $this->httpCall($this->getManagementUrl().'/images', HttpClient::POST,
+        $result = $this->httpCall($this->getManagementUrl().'/images', 'POST',
                                   null, null, json_encode($data));
-        $status = $result->getStatus();
+        $status = $result->getStatusCode();
         switch ($status) {
             case '202' : // break intentionally omitted   
-                 $image= json_decode($result->getBody(),true);
+                $image= json_decode($result->getBody(),true);
                 return new Servers\Image($this,$image['image']);
             case '503' :
                 $this->errorMsg= self::ERROR_SERVICE_UNAVAILABLE;
@@ -925,8 +935,8 @@ class Servers extends Rackspace
         if (empty($id)) {
             throw new Exception\InvalidArgumentException(self::ERROR_PARAM_NO_ID);
         }
-        $result = $this->httpCall($this->getManagementUrl().'/images/'.rawurlencode($id),HttpClient::DELETE);
-        $status = $result->getStatus();
+        $result = $this->httpCall($this->getManagementUrl().'/images/'.rawurlencode($id),'DELETE');
+        $status = $result->getStatusCode();
         switch ($status) {
             case '204' : // break intentionally omitted   
                 return true;
@@ -961,13 +971,16 @@ class Servers extends Rackspace
             throw new Exception\InvalidArgumentException(self::ERROR_PARAM_NO_ID);
         }
         $result= $this->httpCall($this->getManagementUrl().'/servers/'.rawurlencode($id).'/backup_schedule',
-                                 HttpClient::GET);
-        $status= $result->getStatus();
+                                 'GET');
+        $status= $result->getStatusCode();
         switch ($status) {
             case '200' : 
             case '203' : // break intentionally omitted   
                 $backup = json_decode($result->getBody(),true);
-                return $image['backupSchedule'];
+                if (isset($image['backupSchedule'])) {
+                    return $image['backupSchedule'];
+                }
+                break;
             case '503' :
                 $this->errorMsg= self::ERROR_SERVICE_UNAVAILABLE;
                 break;
@@ -1014,8 +1027,8 @@ class Servers extends Rackspace
             )
         );
         $result= $this->httpCall($this->getManagementUrl().'/servers/'.rawurlencode($id).'/backup_schedule',
-                                 HttpClient::POST,null,null,json_encode($data));
-        $status= $result->getStatus();
+                                 'POST',null,null,json_encode($data));
+        $status= $result->getStatusCode();
         switch ($status) {
             case '204' : // break intentionally omitted   
                 return true;
@@ -1053,8 +1066,8 @@ class Servers extends Rackspace
             throw new Exception\InvalidArgumentException(self::ERROR_PARAM_NO_ID);
         }
         $result = $this->httpCall($this->getManagementUrl().'/servers/'.rawurlencode($id).'/backup_schedule',
-                                  HttpClient::DELETE);
-        $status = $result->getStatus();
+                                  'DELETE');
+        $status = $result->getStatusCode();
         switch ($status) {
             case '204' : // break intentionally omitted   
                 return true;
@@ -1092,8 +1105,8 @@ class Servers extends Rackspace
         if ($details) {
             $url.= '/detail';
         } 
-        $result= $this->httpCall($this->getManagementUrl().$url,HttpClient::GET);
-        $status= $result->getStatus();
+        $result= $this->httpCall($this->getManagementUrl().$url,'GET');
+        $status= $result->getStatusCode();
         switch ($status) {
             case '200' : 
             case '203' : // break intentionally omitted   
@@ -1126,8 +1139,8 @@ class Servers extends Rackspace
         if (empty($id)) {
             throw new Exception\InvalidArgumentException(self::ERROR_PARAM_NO_ID);
         }
-        $result= $this->httpCall($this->getManagementUrl().'/shared_ip_groups/'.rawurlencode($id),HttpClient::GET);
-        $status= $result->getStatus();
+        $result= $this->httpCall($this->getManagementUrl().'/shared_ip_groups/'.rawurlencode($id),'GET');
+        $status= $result->getStatusCode();
         switch ($status) {
             case '200' : 
             case '203' : // break intentionally omitted   
@@ -1174,8 +1187,8 @@ class Servers extends Rackspace
             )
         );
         $result= $this->httpCall($this->getManagementUrl().'/shared_ip_groups',
-                                 HttpClient::POST,null,null,json_encode($data));
-        $status= $result->getStatus();
+                                 'POST',null,null,json_encode($data));
+        $status= $result->getStatusCode();
         switch ($status) {
             case '201' : // break intentionally omitted   
                 $group = json_decode($result->getBody(),true);
@@ -1207,8 +1220,8 @@ class Servers extends Rackspace
         if (empty($id)) {
             throw new Exception\InvalidArgumentException(self::ERROR_PARAM_NO_ID);
         }
-        $result= $this->httpCall($this->getManagementUrl().'/shared_ip_groups/'.rawurlencode($id),HttpClient::DELETE);
-        $status= $result->getStatus();
+        $result= $this->httpCall($this->getManagementUrl().'/shared_ip_groups/'.rawurlencode($id),'DELETE');
+        $status= $result->getStatusCode();
         switch ($status) {
             case '204' : // break intentionally omitted   
                 return true;

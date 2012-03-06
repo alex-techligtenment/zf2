@@ -15,7 +15,7 @@
  * @category   Zend
  * @package    Zend\Service\Rackspace\
  * @subpackage Files
- * @copyright  Copyright (c) 2005-2011 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2012 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
  */
 
@@ -25,10 +25,7 @@
 namespace Zend\Service\Rackspace\Files;
 
 use Zend\Service\Rackspace\Files\Container,
-        Zend\Service\Rackspace\Files as RackspaceFiles,
-        Zend\Service\Rackspace\Exception,
-        Zend\Service\Rackspace\Exception\InvalidArgumentException,
-        Zend\Service\Rackspace\Exception\OutOfBoundsException;
+        Zend\Service\Rackspace\Files as RackspaceFiles;
 
 /**
  * List of servers retrived from the GoGrid web service
@@ -41,7 +38,7 @@ use Zend\Service\Rackspace\Files\Container,
  * @category   Zend
  * @package    Zend\Service\Rackspace
  * @subpackage Files
- * @copyright  Copyright (c) 2005-2011 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2012 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
  */
 class ContainerList implements \Countable, \Iterator, \ArrayAccess
@@ -67,7 +64,7 @@ class ContainerList implements \Countable, \Iterator, \ArrayAccess
     public function __construct(RackspaceFiles $service,$list = array())
     {
         if (!($service instanceof RackspaceFiles) || !is_array($list)) {
-            throw new InvalidArgumentException("You must pass a RackspaceFiles object and an array");
+            throw new Exception\InvalidArgumentException("You must pass a RackspaceFiles object and an array");
         }
         $this->service= $service;
         $this->_constructFromArray($list);
@@ -192,7 +189,7 @@ class ContainerList implements \Countable, \Iterator, \ArrayAccess
         if ($this->offsetExists($offset)) {
             return $this->objects[$offset];
         } else {
-            throw new OutOfBoundsException('Illegal index');
+            throw new  Exception\OutOfBoundsException('Illegal index');
         }
     }
 

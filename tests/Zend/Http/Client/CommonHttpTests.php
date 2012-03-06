@@ -15,7 +15,7 @@
  * @category   Zend
  * @package    Zend_Http
  * @subpackage UnitTests
- * @copyright  Copyright (c) 2005-2011 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2012 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
  */
 
@@ -47,7 +47,7 @@ use Zend\Http\Client as HTTPClient,
  * @category   Zend
  * @package    Zend_Http_Client
  * @subpackage UnitTests
- * @copyright  Copyright (c) 2005-2011 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2012 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
  * @group      Zend_Http
  * @group      Zend_Http_Client
@@ -65,14 +65,14 @@ abstract class CommonHttpTests extends \PHPUnit_Framework_TestCase
     /**
      * Common HTTP client
      *
-     * @var Zend_Http_Client
+     * @var \Zend\Http\Client
      */
     protected $client = null;
 
     /**
      * Common HTTP client adapter
      *
-     * @var Zend_Http_Client_Adapter_Interface
+     * @var \Zend\Http\Client\Adapter
      */
     protected $_adapter = null;
 
@@ -432,6 +432,40 @@ abstract class CommonHttpTests extends \PHPUnit_Framework_TestCase
     }
 
     /**
+     * @group ZF-4136
+     * @link  http://framework.zend.com/issues/browse/ZF2-122
+     */
+    public function testRedirectPersistsCookies()
+        {
+            $this->client->setUri($this->baseuri . 'testRedirections.php');
+
+            // Set some parameters
+            $this->client->setParameterGet(array('swallow' => 'african'));
+            $this->client->setParameterPost(array('Camelot' => 'A silly place'));
+
+            // Send POST request
+            $this->client->setMethod('POST');
+            $res = $this->client->send();
+
+            $this->assertEquals(3, $this->client->getRedirectionsCount(), 'Redirection counter is not as expected');
+
+            // Make sure the body does *not* contain the set parameters
+            $this->assertNotContains('swallow', $res->getBody());
+            $this->assertNotContains('Camelot', $res->getBody());
+
+            // Check that we have received and persisted expected cookies
+            $cookies = $this->client->getCookies();
+            $this->assertInternalType('array', $cookies, 'Client is not sending cookies on redirect');
+            $this->assertArrayHasKey('zf2testSessionCookie', $cookies, 'Client is not sending cookies on redirect');
+            $this->assertArrayHasKey('zf2testLongLivedCookie', $cookies, 'Client is not sending cookies on redirect');
+            $this->assertEquals('positive', $cookies['zf2testSessionCookie']->getValue());
+            $this->assertEquals('positive', $cookies['zf2testLongLivedCookie']->getValue());
+
+            // Check that expired cookies are not passed on
+            $this->assertArrayNotHasKey('zf2testExpiredCookie', $cookies, 'Expired cookies are not removed.');
+        }
+
+    /**
      * Make sure the client properly redirects in strict mode
      *
      */
@@ -498,8 +532,8 @@ abstract class CommonHttpTests extends \PHPUnit_Framework_TestCase
         $this->client->setConfig(array('maxredirects' => 1));
 
         // Get the host and port part of our baseuri
-        $uri = $this->client->getUri()->getScheme() . '://' . $this->client->getUri()->getHost() . ':' .
-            $this->client->getUri()->getPort();
+        $port = ($this->client->getUri()->getPort() == 80) ? '' : ':' .$this->client->getUri()->getPort(); 
+        $uri = $this->client->getUri()->getScheme() . '://' . $this->client->getUri()->getHost() . $port;
         
         $res = $this->client->send();
         
@@ -914,6 +948,29 @@ abstract class CommonHttpTests extends \PHPUnit_Framework_TestCase
         }
 
         $this->assertEquals($expect, strlen($response->getBody()));
+    }
+
+
+    /**
+     * @group ZF2-78
+     * @dataProvider parameterArrayProvider
+     */
+    public function testContentTypeAdditionlInfo($params)
+    {
+        $content_type = 'application/x-www-form-urlencoded; charset=UTF-8';
+
+        $this->client->setUri($this->baseuri . 'testPostData.php');
+        $this->client->setHeaders(array(
+            'Content-Type' => $content_type
+        ));
+        $this->client->setMethod(\Zend\Http\Request::METHOD_POST);
+
+        $this->client->setParameterPost($params);
+        
+        $this->client->send();
+        $request = Request::fromString($this->client->getLastRawRequest());
+        $this->assertEquals($content_type, 
+                            $request->headers()->get('Content-Type')->getFieldValue());
     }
 
     /**

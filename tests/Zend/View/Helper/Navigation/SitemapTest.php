@@ -15,7 +15,7 @@
  * @category   Zend
  * @package    Zend_View
  * @subpackage UnitTests
- * @copyright  Copyright (c) 2005-2011 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2012 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
  */
 
@@ -32,16 +32,13 @@ use Zend\View;
  * @category   Zend
  * @package    Zend_View
  * @subpackage UnitTests
- * @copyright  Copyright (c) 2005-2011 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2012 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
  * @group      Zend_View
  * @group      Zend_View_Helper
  */
 class SitemapTest extends AbstractTest
 {
-    protected $_front;
-    protected $_oldRequest;
-    protected $_oldRouter;
     protected $_oldServer = array();
 
     /**
@@ -85,28 +82,14 @@ class SitemapTest extends AbstractTest
         $_SERVER['SERVER_PORT'] = 80;
         $_SERVER['REQUEST_URI'] = '/';
 
-        $this->_front = \Zend\Controller\Front::getInstance();
-        $this->_oldRequest = $this->_front->getRequest();
-        $this->_oldRouter = $this->_front->getRouter();
-
-        $this->_front->resetInstance();
-        $this->_front->setRequest(new Request\Http());
-        $this->_front->getRouter()->addDefaultRoutes();
-
         parent::setUp();
 
         $this->_helper->setFormatOutput(true);
+        $this->_helper->getView()->plugin('basepath')->setBasePath('');
     }
 
     protected function tearDown()
     {
-        if (null !== $this->_oldRequest) {
-            $this->_front->setRequest($this->_oldRequest);
-        } else {
-            $this->_front->setRequest(new Request\Http());
-        }
-        $this->_front->setRouter($this->_oldRouter);
-
         foreach ($this->_oldServer as $key => $value) {
             $_SERVER[$key] = $value;
         }
@@ -115,14 +98,14 @@ class SitemapTest extends AbstractTest
 
     public function testHelperEntryPointWithoutAnyParams()
     {
-        $returned = $this->_helper->direct();
+        $returned = $this->_helper->__invoke();
         $this->assertEquals($this->_helper, $returned);
         $this->assertEquals($this->_nav1, $returned->getContainer());
     }
 
     public function testHelperEntryPointWithContainerParam()
     {
-        $returned = $this->_helper->direct($this->_nav2);
+        $returned = $this->_helper->__invoke($this->_nav2);
         $this->assertEquals($this->_helper, $returned);
         $this->assertEquals($this->_nav2, $returned->getContainer());
     }

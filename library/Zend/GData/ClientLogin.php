@@ -15,7 +15,7 @@
  * @category   Zend
  * @package    Zend_Gdata
  * @subpackage Gdata
- * @copyright  Copyright (c) 2005-2011 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2012 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
  */
 
@@ -29,15 +29,10 @@ namespace Zend\GData;
  * for Installed Applications" also known as "ClientLogin".
  * @see http://code.google.com/apis/accounts/AuthForInstalledApps.html
  *
- * @uses       \Zend\GData\App\AuthException
- * @uses       \Zend\GData\App\CaptchaRequiredException
- * @uses       \Zend\GData\App\HttpException
- * @uses       \Zend\GData\HttpClient
- * @uses       \Zend\Version
  * @category   Zend
  * @package    Zend_Gdata
  * @subpackage Gdata
- * @copyright  Copyright (c) 2005-2011 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2012 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
  */
 class ClientLogin
@@ -93,6 +88,7 @@ class ClientLogin
         if ($client == null) {
             $client = new HttpClient();
         }
+        
         if (!$client instanceof \Zend\Http\Client) {
             throw new App\HttpException(
                     'Client is not an instance of Zend\Http\Client.');
@@ -100,6 +96,7 @@ class ClientLogin
 
         // Build the HTTP client for authentication
         $client->setUri($loginUri);
+        $client->setMethod('POST');
         $useragent = $source . ' Zend_Framework_Gdata/' . \Zend\Version::VERSION;
         $client->setConfig(array(
                 'maxredirects'    => 0,
@@ -107,35 +104,39 @@ class ClientLogin
                 'useragent' => $useragent
             )
         );
-        $client->setParameterPost('accountType', $accountType);
-        $client->setParameterPost('Email', (string) $email);
-        $client->setParameterPost('Passwd', (string) $password);
-        $client->setParameterPost('service', (string) $service);
-        $client->setParameterPost('source', (string) $source);
+        
+        $client->setEncType('multipart/form-data');
+        
+        $postParams = array('accountType' => $accountType,
+                            'Email'       => (string)$email,
+                            'Passwd'      => (string) $password,
+                            'service'     => (string) $service,
+                            'source'      => (string) $source);
+        
         if ($loginToken || $loginCaptcha) {
             if($loginToken && $loginCaptcha) {
-                $client->setParameterPost('logintoken', (string) $loginToken);
-                $client->setParameterPost('logincaptcha',
-                        (string) $loginCaptcha);
-            }
-            else {
+                $postParams += array('logintoken' => (string)$loginToken, 
+                                     'logincaptcha' => (string)$loginCaptcha);
+            } else {
                 throw new App\AuthException(
                     'Please provide both a token ID and a user\'s response ' .
                     'to the CAPTCHA challenge.');
             }
         }
-
+        
+        $client->setParameterPost($postParams);
+        
         // Send the authentication request
         // For some reason Google's server causes an SSL error. We use the
         // output buffer to supress an error from being shown. Ugly - but works!
         ob_start();
         try {
-            $response = $client->request('POST');
+            $response = $client->send();
         } catch (\Zend\Http\Client\Exception $e) {
             throw new App\HttpException($e->getMessage(), $e);
         }
         ob_end_clean();
-
+        
         // Parse Google's response
         $goog_resp = array();
         foreach (explode("\n", $response->getBody()) as $l) {
@@ -146,7 +147,7 @@ class ClientLogin
             }
         }
 
-        if ($response->getStatus() == 200) {
+        if ($response->getStatusCode() == 200) {
             $client->setClientLoginToken($goog_resp['Auth']);
             $useragent = $source . ' Zend_Framework_Gdata/' . \Zend\Version::VERSION;
             $client->setConfig(array(
@@ -156,7 +157,7 @@ class ClientLogin
             );
             return $client;
 
-        } elseif ($response->getStatus() == 403) {
+        } elseif ($response->getStatusCode() == 403) {
             // Check if the server asked for a CAPTCHA
             if (array_key_exists('Error', $goog_resp) &&
                 $goog_resp['Error'] == 'CaptchaRequired') {

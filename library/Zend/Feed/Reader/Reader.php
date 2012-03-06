@@ -14,7 +14,7 @@
  *
  * @category   Zend
  * @package    Zend_Feed_Reader
- * @copyright  Copyright (c) 2005-2011 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2012 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
  */
 
@@ -23,13 +23,15 @@
 */
 namespace Zend\Feed\Reader;
 
-use Zend\Http,
-    Zend\Loader;
+use Zend\Cache\Storage\Adapter as CacheAdapter,
+    Zend\Http,
+    Zend\Loader,
+    Zend\Stdlib\ErrorHandler;
 
 /**
 * @category Zend
 * @package Zend_Feed_Reader
-* @copyright Copyright (c) 2005-2011 Zend Technologies USA Inc. (http://www.zend.com)
+* @copyright Copyright (c) 2005-2012 Zend Technologies USA Inc. (http://www.zend.com)
 * @license http://framework.zend.com/license/new-bsd New BSD License
 */
 class Reader
@@ -65,7 +67,7 @@ class Reader
     /**
      * Cache instance
      *
-     * @var \Zend\Cache\Frontend\Core
+     * @var CacheAdapter
      */
     protected static $_cache = null;
 
@@ -111,7 +113,7 @@ class Reader
     /**
      * Get the Feed cache
      *
-     * @return \Zend\Cache\Frontend\Core
+     * @return CacheAdapter
      */
     public static function getCache()
     {
@@ -121,10 +123,10 @@ class Reader
     /**
      * Set the feed cache
      *
-     * @param \Zend\Cache\Frontend\Core $cache
+     * @param  CacheAdapter $cache
      * @return void
      */
-    public static function setCache(\Zend\Cache\Frontend\Core $cache)
+    public static function setCache(CacheAdapter $cache)
     {
         self::$_cache = $cache;
     }
@@ -211,60 +213,60 @@ class Reader
         $responseXml = '';
         $client      = self::getHttpClient();
         $client->resetParameters();
-        $client->setHeaders('If-None-Match', null);
-        $client->setHeaders('If-Modified-Since', null);
+        $headers = new Http\Headers();
+        $client->setHeaders($headers);
         $client->setUri($uri);
         $cacheId = 'Zend_Feed_Reader_' . md5($uri);
 
         if (self::$_httpConditionalGet && $cache) {
-            $data = $cache->load($cacheId);
+            $data = $cache->getItem($cacheId);
             if ($data) {
                 if ($etag === null) {
-                    $etag = $cache->load($cacheId.'_etag');
+                    $etag = $cache->getItem($cacheId.'_etag');
                 }
                 if ($lastModified === null) {
-                    $lastModified = $cache->load($cacheId.'_lastmodified');;
+                    $lastModified = $cache->getItem($cacheId.'_lastmodified');;
                 }
                 if ($etag) {
-                    $client->setHeaders('If-None-Match', $etag);
+                    $headers->addHeaderLine('If-None-Match', $etag);
                 }
                 if ($lastModified) {
-                    $client->setHeaders('If-Modified-Since', $lastModified);
+                    $headers->addHeaderLine('If-Modified-Since', $lastModified);
                 }
             }
-            $response = $client->request('GET');
-            if ($response->getStatus() !== 200 && $response->getStatus() !== 304) {
-                throw new Exception('Feed failed to load, got response code ' . $response->getStatus());
+            $response = $client->send();
+            if ($response->getStatusCode() !== 200 && $response->getStatusCode() !== 304) {
+                throw new Exception('Feed failed to load, got response code ' . $response->getStatusCode());
             }
-            if ($response->getStatus() == 304) {
+            if ($response->getStatusCode() == 304) {
                 $responseXml = $data;
             } else {
                 $responseXml = $response->getBody();
-                $cache->save($responseXml, $cacheId);
+                $cache->setItem($cacheId, $responseXml);
                 if ($response->getHeader('ETag')) {
-                    $cache->save($response->getHeader('ETag'), $cacheId.'_etag');
+                    $cache->setItem($cacheId . '_etag', $response->getHeader('ETag'));
                 }
                 if ($response->getHeader('Last-Modified')) {
-                    $cache->save($response->getHeader('Last-Modified'), $cacheId.'_lastmodified');
+                    $cache->setItem($cacheId . '_lastmodified', $response->getHeader('Last-Modified'));
                 }
             }
             return self::importString($responseXml);
         } elseif ($cache) {
-            $data = $cache->load($cacheId);
+            $data = $cache->getItem($cacheId);
             if ($data !== false) {
                 return self::importString($data);
             }
-            $response = $client->request('GET');
-            if ($response->getStatus() !== 200) {
-                throw new Exception('Feed failed to load, got response code ' . $response->getStatus());
+            $response = $client->send();
+            if ((int)$response->getStatusCode() !== 200) {
+                throw new Exception('Feed failed to load, got response code ' . $response->getStatusCode());
             }
             $responseXml = $response->getBody();
-            $cache->save($responseXml, $cacheId);
+            $cache->setItem($cacheId, $responseXml);
             return self::importString($responseXml);
         } else {
-            $response = $client->request('GET');
-            if ($response->getStatus() !== 200) {
-                throw new Exception('Feed failed to load, got response code ' . $response->getStatus());
+            $response = $client->send();
+            if ((int)$response->getStatusCode() !== 200) {
+                throw new Exception('Feed failed to load, got response code ' . $response->getStatusCode());
             }
             $reader = self::importString($response->getBody());
             $reader->setOriginalSourceUri($uri);
@@ -322,11 +324,11 @@ class Reader
      */
     public static function importFile($filename)
     {
-        @ini_set('track_errors', 1);
-        $feed = @file_get_contents($filename);
-        @ini_restore('track_errors');
+        ErrorHandler::start();
+        $feed = file_get_contents($filename);
+        $err  = ErrorHandler::stop();
         if ($feed === false) {
-            throw new Exception("File could not be loaded: $php_errormsg");
+            throw new Exception("File '{$filename}' could not be loaded", 0, $err);
         }
         return self::importString($feed);
     }
@@ -335,9 +337,9 @@ class Reader
     {
         $client = self::getHttpClient();
         $client->setUri($uri);
-        $response = $client->request();
-        if ($response->getStatus() !== 200) {
-            throw new Exception("Failed to access $uri, got response code " . $response->getStatus());
+        $response = $client->send();
+        if ($response->getStatusCode() !== 200) {
+            throw new Exception("Failed to access $uri, got response code " . $response->getStatusCode());
         }
         $responseHtml = $response->getBody();
         $libxml_errflag = libxml_use_internal_errors(true);
@@ -454,7 +456,7 @@ class Reader
         if ($xpath->query('//atom:feed')->length) {
             return self::TYPE_ATOM_10;
         }
-        
+
         if ($xpath->query('//atom:entry')->length) {
             if ($specOnly == true) {
                 return self::TYPE_ATOM_10;
@@ -643,7 +645,7 @@ class Reader
         self::registerExtension('Thread');
         self::registerExtension('Podcast');
     }
-    
+
     /**
      * Utility method to apply array_unique operation to a multidimensional
      * array.
@@ -662,5 +664,5 @@ class Reader
         }
         return $array;
     }
- 
+
 }

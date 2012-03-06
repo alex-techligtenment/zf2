@@ -15,7 +15,7 @@
  * @category   Zend
  * @package    Zend_Dojo
  * @subpackage View
- * @copyright  Copyright (c) 2005-2011 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2012 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
  */
 
@@ -33,7 +33,7 @@ use Zend\View\Helper\Form as FormHelper;
  * @uses       \Zend\View\Helper\Form
  * @package    Zend_Dojo
  * @subpackage View
- * @copyright  Copyright (c) 2005-2011 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2012 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
  */
 class DojoForm extends Dijit
@@ -63,7 +63,7 @@ class DojoForm extends Dijit
      * @param  false|string $content
      * @return string
      */
-    public function direct($id = null, $attribs = null, $content = false)
+    public function __invoke($id = null, $attribs = null, $content = false)
     {
         if (!is_array($attribs)) {
             $attribs = (array) $attribs;
@@ -76,7 +76,8 @@ class DojoForm extends Dijit
 
         $attribs = $this->_prepareDijit($attribs, array(), 'layout');
 
-        return $this->getFormHelper()->direct($id, $attribs, $content);
+        $formHelper = $this->getFormHelper();
+        return $formHelper($id, $attribs, $content);
     }
 
     /**

@@ -20,14 +20,12 @@ class InjectionMethod
         return $this->name;
     }
     
-    public function addParameter($name, $class = null, $paramIsOptional = false, $classIsInstantiable = null)
+    public function addParameter($name, $class = null, $isRequired = null)
     {
-        $this->parameters[$name] = array(
+        $this->parameters[] = array(
+            $name,
             $class,
-            $paramIsOptional,
-            (($classIsInstantiable === null && $class !== null)
-                ? (($classIsInstantiable === null) ? true : (bool) $classIsInstantiable)
-                : null)
+            ($isRequired == null) ? true : false
         );
         return $this;
     }

@@ -15,7 +15,7 @@
  * @category   Zend
  * @package    Zend_View
  * @subpackage UnitTests
- * @copyright  Copyright (c) 2005-2011 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2012 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
  */
 
@@ -24,14 +24,14 @@
  */
 namespace ZendTest\View\Helper;
 
-use Zend\View\PhpRenderer as View,
+use Zend\View\Renderer\PhpRenderer as View,
     Zend\View\Helper\DeclareVars;
 
 /**
  * @category   Zend
  * @package    Zend_View
  * @subpackage UnitTests
- * @copyright  Copyright (c) 2005-2011 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2012 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
  * @group      Zend_View
  * @group      Zend_View_Helper
@@ -54,7 +54,7 @@ class DeclareVarsTest extends \PHPUnit_Framework_TestCase
 
     protected function _declareVars()
     {
-        $this->view->plugin('declareVars')->direct(
+        $this->view->plugin('declareVars')->__invoke(
             'varName1',
             'varName2',
             array(

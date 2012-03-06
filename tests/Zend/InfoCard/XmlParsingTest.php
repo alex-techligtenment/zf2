@@ -15,7 +15,7 @@
  * @category   Zend
  * @package    Zend_InfoCard
  * @subpackage UnitTests
- * @copyright  Copyright (c) 2005-2011 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2012 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
  */
 
@@ -23,16 +23,17 @@
  * @namespace
  */
 namespace ZendTest\InfoCard;
-use Zend\InfoCard\XML\EncryptedData;
-use Zend\InfoCard\XML\KeyInfo;
-use Zend\InfoCard\XML;
+use Zend\InfoCard\XML\EncryptedData,
+    Zend\InfoCard\XML\KeyInfo,
+    Zend\InfoCard\XML,
+    Zend\InfoCard\XML\Exception;
 
 
 /**
  * @category   Zend
  * @package    Zend_InfoCard
  * @subpackage UnitTests
- * @copyright  Copyright (c) 2005-2011 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2012 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
  * @group      Zend_InfoCard
  */
@@ -110,6 +111,18 @@ class XmlParsingTest extends \PHPUnit_Framework_TestCase
         $sxe = KeyInfo\XMLDSig::convertToObject($dom, 'Zend\InfoCard\XML\KeyInfo\XMLDSig');
 
         $this->assertTrue($sxe instanceof KeyInfo\XMLDSig);
+    }
+
+    public function testConvertObjectClassLoad()
+    {
+        $encryptedData = EncryptedData\Factory::getInstance($this->_xmlDocument);
+        $keyInfo = $encryptedData->getKeyInfo();
+        $dom = KeyInfo\XMLDSig::convertToDOM($keyInfo);
+
+        try {
+            $sxe = KeyInfo\XMLDSig::convertToObject($dom, '\ZendTest\InfoCard\XML\KeyInfo\InvalidClassName');
+        } catch (Exception\InvalidArgumentException $e) {
+        }
     }
 
     public function testEncryptedDataKeyInfo()

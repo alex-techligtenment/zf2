@@ -15,7 +15,7 @@
  * @category   Zend
  * @package    Zend_EventManager
  * @subpackage UnitTests
- * @copyright  Copyright (c) 2005-2011 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2012 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
  */
 
@@ -32,7 +32,7 @@ use Zend\EventManager\Event,
  * @package    Zend_EventManager
  * @subpackage UnitTests
  * @group      Zend_EventManager
- * @copyright  Copyright (c) 2005-2011 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2012 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
  */
 class EventManagerTest extends \PHPUnit_Framework_TestCase
@@ -227,6 +227,16 @@ class EventManagerTest extends \PHPUnit_Framework_TestCase
         }
     }
 
+    public function testCanAttachListenerAggregateViaAttach()
+    {
+        $aggregate = new TestAsset\MockAggregate();
+        $this->events->attach($aggregate);
+        $events = $this->events->getEvents();
+        foreach (array('foo.bar', 'foo.baz') as $event) {
+            $this->assertContains($event, $events);
+        }
+    }
+
     public function testAttachAggregateReturnsAttachOfListenerAggregate()
     {
         $aggregate = new TestAsset\MockAggregate();
@@ -264,12 +274,56 @@ class EventManagerTest extends \PHPUnit_Framework_TestCase
         $this->assertContains($listenerOther, $listeners);
     }
 
+    public function testCanDetachListenerAggregatesViaDetach()
+    {
+        // setup some other event listeners, to ensure appropriate items are detached
+        $listenerFooBar1 = $this->events->attach('foo.bar', function(){ return true; });
+        $listenerFooBar2 = $this->events->attach('foo.bar', function(){ return true; });
+        $listenerFooBaz1 = $this->events->attach('foo.baz', function(){ return true; });
+        $listenerOther   = $this->events->attach('other', function(){ return true; });
+
+        $aggregate = new TestAsset\MockAggregate();
+        $this->events->attach($aggregate);
+        $this->events->detach($aggregate);
+        $events = $this->events->getEvents();
+        foreach (array('foo.bar', 'foo.baz', 'other') as $event) {
+            $this->assertContains($event, $events);
+        }
+
+        $listeners = $this->events->getListeners('foo.bar');
+        $this->assertEquals(2, count($listeners));
+        $this->assertContains($listenerFooBar1, $listeners);
+        $this->assertContains($listenerFooBar2, $listeners);
+
+        $listeners = $this->events->getListeners('foo.baz');
+        $this->assertEquals(1, count($listeners));
+        $this->assertContains($listenerFooBaz1, $listeners);
+
+        $listeners = $this->events->getListeners('other');
+        $this->assertEquals(1, count($listeners));
+        $this->assertContains($listenerOther, $listeners);
+    }
+
     public function testDetachAggregateReturnsDetachOfListenerAggregate()
     {
         $aggregate = new TestAsset\MockAggregate();
         $this->events->attachAggregate($aggregate);
         $method = $this->events->detachAggregate($aggregate);
         $this->assertSame('ZendTest\EventManager\TestAsset\MockAggregate::detach', $method);
+    }
+
+    public function testAttachAggregateAcceptsOptionalPriorityValue()
+    {
+        $aggregate = new TestAsset\MockAggregate();
+        $this->events->attachAggregate($aggregate, 1);
+        $this->assertEquals(1, $aggregate->priority);
+    }
+
+    public function testAttachAggregateAcceptsOptionalPriorityValueViaAttachCallbackArgument()
+    {
+        $aggregate = new TestAsset\MockAggregate();
+        $this->events->attach($aggregate, 1);
+        $this->assertEquals(1, $aggregate->priority);
     }
 
     public function testCallingEventsStopPropagationMethodHaltsEventEmission()
@@ -444,5 +498,52 @@ class EventManagerTest extends \PHPUnit_Framework_TestCase
             return ($r instanceof EventDescription);
         });
         $this->assertTrue($responses->stopped());
+    }
+
+    public function testWeakRefsAreHonoredWhenTriggering()
+    {
+        if (!class_exists('WeakRef', false)) {
+            $this->markTestSkipped('Requires pecl/weakref');
+        }
+
+        $functor = new TestAsset\Functor;
+        $this->events->attach('test', $functor);
+
+        unset($functor);
+
+        $result = $this->events->trigger('test', $this, array());
+        $message = $result->last();
+        $this->assertNull($message);
+    }
+
+    public function testDuplicateIdentifiersAreNotRegistered()
+    {
+        $events = new EventManager(array(__CLASS__, get_class($this)));
+        $identifiers = $events->getIdentifiers();
+        $this->assertSame(count($identifiers), 1);
+        $this->assertSame($identifiers[0], __CLASS__);
+        $events->addIdentifiers(__CLASS__);
+        $this->assertSame(count($identifiers), 1);
+        $this->assertSame($identifiers[0], __CLASS__);
+    }
+
+    public function testIdentifierGetterSettersWorkWithArrays()
+    {
+        $identifiers = array('foo', 'bar');
+        $this->assertInstanceOf('Zend\EventManager\EventManager', $this->events->setIdentifiers($identifiers));
+        $this->assertSame($this->events->getIdentifiers(), $identifiers);
+        $identifiers[] = 'baz';
+        $this->assertInstanceOf('Zend\EventManager\EventManager', $this->events->addIdentifiers($identifiers));
+        $this->assertSame($this->events->getIdentifiers(), $identifiers);
+    }
+
+    public function testIdentifierGetterSettersWorkWithTraversables()
+    {
+        $identifiers = new \ArrayIterator(array('foo', 'bar'));
+        $this->assertInstanceOf('Zend\EventManager\EventManager', $this->events->setIdentifiers($identifiers));
+        $this->assertSame($this->events->getIdentifiers(), (array) $identifiers);
+        $identifiers = new \ArrayIterator(array('foo', 'bar', 'baz'));
+        $this->assertInstanceOf('Zend\EventManager\EventManager', $this->events->addIdentifiers($identifiers));
+        $this->assertSame($this->events->getIdentifiers(), (array) $identifiers);
     }
 }

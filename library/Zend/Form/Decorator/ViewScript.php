@@ -15,7 +15,7 @@
  * @category   Zend
  * @package    Zend_Form
  * @subpackage Decorator
- * @copyright  Copyright (c) 2005-2011 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2012 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
  */
 
@@ -49,7 +49,7 @@ namespace Zend\Form\Decorator;
  * @category   Zend
  * @package    Zend_Form
  * @subpackage Decorator
- * @copyright  Copyright (c) 2005-2011 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2012 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
  */
 class ViewScript extends AbstractDecorator
@@ -129,7 +129,7 @@ class ViewScript extends AbstractDecorator
         $vars['content']   = $content;
         $vars['decorator'] = $this;
 
-        $renderedContent = $view->plugin('partial')->direct($viewScript, $vars);
+        $renderedContent = $view->partial($viewScript, $vars);
 
         // Get placement again to see if it has changed
         $placement = $this->getPlacement();

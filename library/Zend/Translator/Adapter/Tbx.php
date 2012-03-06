@@ -14,7 +14,7 @@
  *
  * @category   Zend
  * @package    Zend_Translator
- * @copyright  Copyright (c) 2005-2011 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2012 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
  */
 
@@ -22,22 +22,22 @@
  * @namespace
  */
 namespace Zend\Translator\Adapter;
-use Zend\Translator\Adapter as TranslationAdapter,
+use Zend\Translator\Adapter\AbstractAdapter,
     Zend\Translator,
-    Zend\Translator\Adapter\Exception\InvalidArgumentException,
-    Zend\Translator\Adapter\Exception\InvalidFileTypeException;
+    Zend\Translator\Exception\InvalidArgumentException,
+    Zend\Translator\Exception\InvalidFileTypeException;
 
 /**
  * @uses       \Zend\Locale\Locale
- * @uses       \Zend\Translator\Adapter\Adapter
- * @uses       \Zend\Translator\Adapter\Exception\InvalidArgumentException
- * @uses       \Zend\Translator\Adapter\Exception\InvalidFileTypeException
+ * @uses       \Zend\Translator\Adapter\AbstractAdapter
+ * @uses       \Zend\Translator\Exception\InvalidArgumentException
+ * @uses       \Zend\Translator\Exception\InvalidFileTypeException
  * @category   Zend
  * @package    Zend_Translator
- * @copyright  Copyright (c) 2005-2011 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2012 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
  */
-class Tbx extends TranslationAdapter
+class Tbx extends AbstractAdapter
 {
     // Internal variables
     private $_file        = false;
@@ -55,8 +55,8 @@ class Tbx extends TranslationAdapter
      * @param  string  $locale    Locale has no effect for TBX because TBX defines all languages within
      *                            the source file
      * @param  array   $option    OPTIONAL Options to use
-     * @throws \Zend\Translator\Adapter\Exception\InvalidArgumentException
-     * @throws \Zend\Translator\Adapter\Exception\InvalidFileTypeException
+     * @throws \Zend\Translator\Exception\InvalidArgumentException
+     * @throws \Zend\Translator\Exception\InvalidFileTypeException
      * @return array
      */
     protected function _loadTranslationData($filename, $locale, array $options = array())
@@ -74,9 +74,10 @@ class Tbx extends TranslationAdapter
         xml_set_character_data_handler($this->_file, "_contentElement");
 
         if (!xml_parse($this->_file, file_get_contents($filename))) {
-            $ex = sprintf('XML error: %s at line %d',
+            $ex = sprintf('XML error: %s at line %d of file %s',
                           xml_error_string(xml_get_error_code($this->_file)),
-                          xml_get_current_line_number($this->_file));
+                          xml_get_current_line_number($this->_file),
+                          $filename);
             xml_parser_free($this->_file);
             throw new InvalidFileTypeException($ex);
         }

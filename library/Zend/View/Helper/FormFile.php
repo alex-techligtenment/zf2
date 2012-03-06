@@ -15,7 +15,7 @@
  * @category   Zend
  * @package    Zend_View
  * @subpackage Helper
- * @copyright  Copyright (c) 2005-2011 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2012 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
  */
 
@@ -31,7 +31,7 @@ namespace Zend\View\Helper;
  * @category   Zend
  * @package    Zend_View
  * @subpackage Helper
- * @copyright  Copyright (c) 2005-2011 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2012 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
  */
 class FormFile extends FormElement
@@ -49,12 +49,8 @@ class FormFile extends FormElement
      *
      * @return string The element XHTML.
      */
-    public function direct($name = null, $attribs = null)
+    public function __invoke($name, $attribs = null)
     {
-        if ($name == null) {
-            throw new \InvalidArgumentException('FormFile: missing argument. $name is required in formFile($name, $attribs = null)');
-        }
-        
         $info = $this->_getInfo($name, null, $attribs);
         extract($info); // name, id, value, attribs, options, listsep, disable
 
@@ -71,12 +67,13 @@ class FormFile extends FormElement
         }
 
         // build the element
-        $xhtml = '<input type="file"'
-                . ' name="' . $this->view->vars()->escape($name) . '"'
-                . ' id="' . $this->view->vars()->escape($id) . '"'
-                . $disabled
-                . $this->_htmlAttribs($attribs)
-                . $endTag;
+        $escaper = $this->view->plugin('escape');
+        $xhtml   = '<input type="file"'
+                 . ' name="' . $escaper($name) . '"'
+                 . ' id="' . $escaper($id) . '"'
+                 . $disabled
+                 . $this->_htmlAttribs($attribs)
+                 . $endTag;
 
         return $xhtml;
     }

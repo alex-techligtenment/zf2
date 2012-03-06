@@ -15,7 +15,7 @@
  * @category   Zend
  * @package    Zend_View
  * @subpackage UnitTests
- * @copyright  Copyright (c) 2005-2011 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2012 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
  */
 
@@ -24,10 +24,9 @@
  */
 namespace ZendTest\View\Helper;
 
-use Zend\Controller\Front as FrontController,
-    Zend\View\Helper,
-    Zend\Layout;
-
+use Zend\View\Helper\Layout,
+    Zend\View\Model\ViewModel,
+    Zend\View\Renderer\PhpRenderer;
 
 /**
  * Test class for Zend_View_Helper_Layout
@@ -35,7 +34,7 @@ use Zend\Controller\Front as FrontController,
  * @category   Zend
  * @package    Zend_View
  * @subpackage UnitTests
- * @copyright  Copyright (c) 2005-2011 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2012 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
  * @group      Zend_View
  * @group      Zend_View_Helper
@@ -51,62 +50,47 @@ class LayoutTest extends \PHPUnit_Framework_TestCase
      */
     public function setUp()
     {
-        $front = FrontController::getInstance();
-        $front->resetInstance();
-        $broker = $front->getHelperBroker();
-        if ($broker->hasPlugin('Layout')) {
-            $broker->unregister('Layout');
-        }
-        if ($broker->hasPlugin('viewRenderer')) {
-            $broker->unregister('viewRenderer');
-        }
+        $this->renderer = $renderer = new PhpRenderer();
+        $this->viewModelHelper = $renderer->plugin('view_model');
+        $this->helper          = $renderer->plugin('layout');
 
-        \Zend\Layout\Layout::resetMvcInstance();
+        $this->parent = new ViewModel();
+        $this->parent->setTemplate('layout');
+        $this->viewModelHelper->setRoot($this->parent);
     }
 
-    /**
-     * Tears down the fixture, for example, close a network connection.
-     * This method is called after a test is executed.
-     *
-     * @return void
-     */
-    public function tearDown()
+    public function testCallingSetTemplateAltersRootModelTemplate()
     {
+        $this->helper->setTemplate('alternate/layout');
+        $this->assertEquals('alternate/layout', $this->parent->getTemplate());
     }
 
-    public function testGetLayoutCreatesLayoutObjectWhenNoPluginRegistered()
+    public function testCallingGetLayoutReturnsRootModelTemplate()
     {
-        $helper = new Helper\Layout();
-        $layout = $helper->getLayout();
-        $this->assertTrue($layout instanceof Layout\Layout);
+        $this->assertEquals('layout', $this->helper->getLayout());
     }
 
-    public function testGetLayoutPullsLayoutObjectFromRegisteredPlugin()
+    public function testCallingInvokeProxiesToSetTemplate()
     {
-        $layout = Layout\Layout::startMvc();
-        $helper = new Helper\Layout();
-        $this->assertSame($layout, $helper->getLayout());
+        $helper = $this->helper;
+        $helper('alternate/layout');
+        $this->assertEquals('alternate/layout', $this->parent->getTemplate());
     }
 
-    public function testSetLayoutReplacesExistingLayoutObject()
+    public function testCallingInvokeWithNoArgumentReturnsViewModel()
     {
-        $layout = Layout\Layout::startMvc();
-        $helper = new Helper\Layout();
-        $this->assertSame($layout, $helper->getLayout());
-
-        $newLayout = new Layout\Layout();
-        $this->assertNotSame($layout, $newLayout);
-
-        $helper->setLayout($newLayout);
-        $this->assertSame($newLayout, $helper->getLayout());
+        $helper = $this->helper;
+        $result = $helper();
+        $this->assertSame($this->parent, $result);
     }
 
-    public function testHelperMethodFetchesLayoutObject()
+    public function testRaisesExceptionIfViewModelHelperHasNoRoot()
     {
-        $layout = Layout\Layout::startMvc();
-        $helper = new Helper\Layout();
+        $renderer         = new PhpRenderer();
+        $viewModelHelper = $renderer->plugin('view_model');
+        $helper          = $renderer->plugin('layout');
 
-        $received = $helper->direct();
-        $this->assertSame($layout, $received);
+        $this->setExpectedException('Zend\View\Exception\RuntimeException', 'view model');
+        $helper->setTemplate('foo/bar');
     }
 }

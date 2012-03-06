@@ -15,7 +15,7 @@
  * @category   Zend
  * @package    Zend_Validator
  * @subpackage UnitTests
- * @copyright  Copyright (c) 2005-2011 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2012 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
  */
 
@@ -23,13 +23,14 @@
  * @namespace
  */
 namespace ZendTest\Validator;
-use Zend\Validator\Hostname;
+use Zend\Validator\Hostname,
+    ReflectionClass;
 
 /**
  * @category   Zend
  * @package    Zend_Validator
  * @subpackage UnitTests
- * @copyright  Copyright (c) 2005-2011 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2012 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
  * @group      Zend_Validator
  */
@@ -150,7 +151,7 @@ class HostnameTest extends \PHPUnit_Framework_TestCase
         }
 
         // Check no IDN matching
-        $validator->setValidateIdn(false);
+        $validator->useIdnCheck(false);
         $valuesExpected = array(
             array(false, array('bürger.de', 'hãllo.de', 'hållo.se'))
             );
@@ -194,7 +195,7 @@ class HostnameTest extends \PHPUnit_Framework_TestCase
         }
 
         // Check no IDN matching
-        $validator->setValidateIdn(false);
+        $validator->useIdnCheck(false);
         $valuesExpected = array(
             array(false, array('bürger.com', 'hãllo.com', 'hållo.com'))
             );
@@ -237,7 +238,7 @@ class HostnameTest extends \PHPUnit_Framework_TestCase
         }
 
         // Check no TLD matching
-        $validator->setValidateTld(false);
+        $validator->useTldCheck(false);
         $valuesExpected = array(
             array(true, array('domain.xx', 'domain.zz', 'domain.madeup'))
             );
@@ -436,5 +437,66 @@ class HostnameTest extends \PHPUnit_Framework_TestCase
         $this->assertTrue($validator->isValid('::192.9.5.5'));
         $this->assertTrue($validator->isValid('::FFFF:129.144.52.38'));
         $this->assertTrue($validator->isValid('2010:836B:4179::836B:4179'));
+    }
+
+    /**
+     * Test extended greek charset
+     *
+     * @group ZF-11751
+     */
+    public function testExtendedGreek()
+    {
+        $validator = new Hostname(Hostname::ALLOW_ALL);
+        $this->assertEquals(true, $validator->isValid('ῆὧὰῧῲ.com'));
+    }
+
+    /**
+     * @group ZF-11796
+     */
+    public function testIDNSI()
+    {
+        $validator = new Hostname(Hostname::ALLOW_ALL);
+
+        $this->assertTrue($validator->isValid('Test123.si'));
+        $this->assertTrue($validator->isValid('țest123.si'));
+        $this->assertTrue($validator->isValid('tĕst123.si'));
+        $this->assertTrue($validator->isValid('tàrø.si'));
+        $this->assertFalse($validator->isValid('رات.si'));
+    }
+    
+    public function testEqualsMessageTemplates()
+    {
+        $validator = $this->_validator;
+        $reflection = new ReflectionClass($validator);
+        
+        if(!$reflection->hasProperty('_messageTemplates')) {
+            return;
+        }
+        
+        $property = $reflection->getProperty('_messageTemplates');
+        $property->setAccessible(true);
+
+        $this->assertEquals(
+            $property->getValue($validator),
+            $validator->getOption('messageTemplates')
+        );
+    }
+    
+    public function testEqualsMessageVariables()
+    {
+        $validator = $this->_validator;
+        $reflection = new ReflectionClass($validator);
+        
+        if(!$reflection->hasProperty('_messageVariables')) {
+            return;
+        }
+        
+        $property = $reflection->getProperty('_messageVariables');
+        $property->setAccessible(true);
+
+        $this->assertEquals(
+            $property->getValue($validator),
+            $validator->getOption('messageVariables')
+        );
     }
 }

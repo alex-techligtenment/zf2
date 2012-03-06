@@ -15,7 +15,7 @@
  * @category   Zend
  * @package    Zend_View
  * @subpackage UnitTests
- * @copyright  Copyright (c) 2005-2011 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2012 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
  */
 
@@ -32,7 +32,7 @@ namespace ZendTest\View\Helper;
  * @category   Zend
  * @package    Zend_View
  * @subpackage UnitTests
- * @copyright  Copyright (c) 2005-2011 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2012 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
  * @group      Zend_View
  * @group      Zend_View_Helper
@@ -52,7 +52,7 @@ class FormPasswordTest extends \PHPUnit_Framework_TestCase
             $registry = \Zend\Registry::getInstance();
             unset($registry['Zend_View_Helper_Doctype']);
         }
-        $this->view = new \Zend\View\PhpRenderer();
+        $this->view = new \Zend\View\Renderer\PhpRenderer();
         $this->helper = new \Zend\View\Helper\FormPassword();
         $this->helper->setView($this->view);
     }
@@ -62,7 +62,7 @@ class FormPasswordTest extends \PHPUnit_Framework_TestCase
      */
     public function testCanDisableElement()
     {
-        $html = $this->helper->direct(array(
+        $html = $this->helper->__invoke(array(
             'name'    => 'foo',
             'value'   => 'bar',
             'attribs' => array('disable' => true)
@@ -76,7 +76,7 @@ class FormPasswordTest extends \PHPUnit_Framework_TestCase
      */
     public function testDisablingElementDoesNotRenderHiddenElements()
     {
-        $html = $this->helper->direct(array(
+        $html = $this->helper->__invoke(array(
             'name'    => 'foo',
             'value'   => 'bar',
             'attribs' => array('disable' => true)
@@ -87,20 +87,20 @@ class FormPasswordTest extends \PHPUnit_Framework_TestCase
 
     public function testShouldRenderAsHtmlByDefault()
     {
-        $test = $this->helper->direct('foo', 'bar');
+        $test = $this->helper->__invoke('foo', 'bar');
         $this->assertNotContains(' />', $test);
     }
 
     public function testShouldAllowRenderingAsXhtml()
     {
-        $this->view->plugin('doctype')->direct('XHTML1_STRICT');
-        $test = $this->helper->direct('foo', 'bar');
+        $this->view->plugin('doctype')->__invoke('XHTML1_STRICT');
+        $test = $this->helper->__invoke('foo', 'bar');
         $this->assertContains(' />', $test);
     }
 
     public function testShouldNotRenderValueByDefault()
     {
-        $test = $this->helper->direct('foo', 'bar');
+        $test = $this->helper->__invoke('foo', 'bar');
         $this->assertNotContains('bar', $test);
     }
 
@@ -109,7 +109,7 @@ class FormPasswordTest extends \PHPUnit_Framework_TestCase
      */
     public function testShouldRenderValueWhenRenderPasswordFlagPresentAndTrue()
     {
-        $test = $this->helper->direct('foo', 'bar', array('renderPassword' => true));
+        $test = $this->helper->__invoke('foo', 'bar', array('renderPassword' => true));
         $this->assertContains('value="bar"', $test);
     }
 
@@ -118,9 +118,9 @@ class FormPasswordTest extends \PHPUnit_Framework_TestCase
      */
     public function testRenderPasswordAttribShouldNeverBeRendered()
     {
-        $test = $this->helper->direct('foo', 'bar', array('renderPassword' => true));
+        $test = $this->helper->__invoke('foo', 'bar', array('renderPassword' => true));
         $this->assertNotContains('renderPassword', $test);
-        $test = $this->helper->direct('foo', 'bar', array('renderPassword' => false));
+        $test = $this->helper->__invoke('foo', 'bar', array('renderPassword' => false));
         $this->assertNotContains('renderPassword', $test);
     }
 }

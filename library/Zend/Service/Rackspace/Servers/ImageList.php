@@ -15,7 +15,7 @@
  * @category   Zend
  * @package    Zend\Service\Rackspace\
  * @subpackage Servers
- * @copyright  Copyright (c) 2005-2011 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2012 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
  */
 
@@ -24,8 +24,7 @@
  */
 namespace Zend\Service\Rackspace\Servers;
 
-use Zend\Service\Rackspace\Exception,
-    Zend\Service\Rackspace\Servers as RackspaceServers;
+use Zend\Service\Rackspace\Servers as RackspaceServers;
 
 /**
  * List of images of Rackspace
@@ -38,7 +37,7 @@ use Zend\Service\Rackspace\Exception,
  * @category   Zend
  * @package    Zend\Service\Rackspace
  * @subpackage Servers
- * @copyright  Copyright (c) 2005-2011 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2012 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
  */
 class ImageList implements \Countable, \Iterator, \ArrayAccess
@@ -203,7 +202,7 @@ class ImageList implements \Countable, \Iterator, \ArrayAccess
         if ($this->offsetExists($offset)) {
             return $this->images[$offset];
         } else {
-            throw new OutOfBoundsException('Illegal index');
+            throw new Exception\OutOfBoundsException('Illegal index');
         }
     }
 

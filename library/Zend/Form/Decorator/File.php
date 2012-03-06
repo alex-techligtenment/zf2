@@ -15,7 +15,7 @@
  * @category   Zend
  * @package    Zend_Form
  * @subpackage Decorator
- * @copyright  Copyright (c) 2005-2011 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2012 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
  */
 
@@ -25,6 +25,7 @@
 namespace Zend\Form\Decorator;
 
 use Zend\File\Transfer\Adapter,
+    Zend\Loader\Pluggable,
     Zend\Form\Element,
     Zend\View\Renderer;
 
@@ -39,7 +40,7 @@ use Zend\File\Transfer\Adapter,
  * @category   Zend
  * @package    Zend_Form
  * @subpackage Decorator
- * @copyright  Copyright (c) 2005-2011 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2012 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
  */
 class File extends AbstractDecorator implements FileDecorator
@@ -108,13 +109,13 @@ class File extends AbstractDecorator implements FileDecorator
         $size      = $element->getMaxFileSize();
         if ($size > 0) {
             $element->setMaxFileSize(0);
-            $markup[] = $view->plugin('formHidden')->direct('MAX_FILE_SIZE', $size);
+            $markup[] = $view->formHidden('MAX_FILE_SIZE', $size);
         }
 
         if (Adapter\Http::isApcAvailable()) {
-            $markup[] = $view->plugin('formHidden')->direct(ini_get('apc.rfc1867_name'), uniqid(), array('id' => 'progress_key'));
+            $markup[] = $view->formHidden(ini_get('apc.rfc1867_name'), uniqid(), array('id' => 'progress_key'));
         } else if (Adapter\Http::isUploadProgressAvailable()) {
-            $markup[] = $view->plugin('formHidden')->direct('UPLOAD_IDENTIFIER', uniqid(), array('id' => 'progress_key'));
+            $markup[] = $view->formHidden('UPLOAD_IDENTIFIER', uniqid(), array('id' => 'progress_key'));
         }
 
         if ($element->isArray()) {
@@ -123,10 +124,10 @@ class File extends AbstractDecorator implements FileDecorator
             for ($i = 0; $i < $count; ++$i) {
                 $htmlAttribs        = $attribs;
                 $htmlAttribs['id'] .= '-' . $i;
-                $markup[] = $view->plugin('formFile')->direct($name, null, $htmlAttribs);
+                $markup[] = $view->formFile($name, $htmlAttribs);
             }
         } else {
-            $markup[] = $view->plugin('formFile')->direct($name, null, $attribs);
+            $markup[] = $view->formFile($name, $attribs);
         }
 
         $markup = implode($separator, $markup);

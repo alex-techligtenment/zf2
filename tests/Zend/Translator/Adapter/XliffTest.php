@@ -15,7 +15,7 @@
  * @category   Zend
  * @package    Zend_Translator
  * @subpackage UnitTests
- * @copyright  Copyright (c) 2005-2011 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2012 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
  */
 
@@ -26,6 +26,7 @@ namespace ZendTest\Translator\Adapter;
 use Zend\Translator\Adapter;
 use Zend\Translator;
 use Zend\Locale;
+use Zend\Translator\Exception\InvalidFileTypeException;
 
 /**
  * Zend_Translator_Adapter_Xliff
@@ -39,7 +40,7 @@ use Zend\Locale;
  * @category   Zend
  * @package    Zend_Translator
  * @subpackage UnitTests
- * @copyright  Copyright (c) 2005-2011 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2012 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
  * @group      Zend_Translator
  */
@@ -49,26 +50,37 @@ class XliffTest extends \PHPUnit_Framework_TestCase
     {
         $adapter = new Adapter\Xliff(__DIR__ . '/_files/translation_en.xliff', 'en');
         $this->assertTrue($adapter instanceof Adapter\Xliff);
+    }
 
-        try {
-            $adapter = new Adapter\Xliff(__DIR__ . '/_files/nofile.xliff', 'en');
-            $this->fail("exception expected");
-        } catch (Translator\Adapter\Exception\InvalidArgumentException $e) {
-            $this->assertContains('is not readable', $e->getMessage());
-        }
+    public function testCreate2()
+    {
+        $this->setExpectedException('Zend\Translator\Exception\InvalidArgumentException');
+        $adapter = new Adapter\Xliff(__DIR__ . '/_files/nofile.xliff', 'en');
+    }
 
-        try {
-            $adapter = new Adapter\Xliff(__DIR__ . '/_files/failed.xliff', 'en');
-            $this->fail("exception expected");
-        } catch (Translator\Adapter\Exception\InvalidFileTypeException $e) {
-            $this->assertContains('Mismatched tag at line', $e->getMessage());
-        }
+    public function testCreate3()
+    {
+        $this->setExpectedException('Zend\Translator\Exception\InvalidFileTypeException');
+        $adapter = new Adapter\Xliff(__DIR__ . '/_files/failed.xliff', 'en');
     }
 
     public function testToString()
     {
         $adapter = new Adapter\Xliff(__DIR__ . '/_files/translation_en.xliff', 'en');
         $this->assertEquals('Xliff', $adapter->toString());
+    }
+    
+    /**
+     * @group ZF-12012
+     */
+    public function testErrorOnCreateIncludesFilename()
+    {
+        try {
+            $adapter = new Adapter\Xliff(__DIR__ . '/_files/failed.xliff', 'en');
+            $this->fail("exception expected");
+        } catch (InvalidFileTypeException $e) {
+            $this->assertContains('failed.xliff', $e->getMessage());
+        }
     }
 
     public function testTranslate()
@@ -99,14 +111,18 @@ class XliffTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals('Message 2', $adapter->translate('Message 2', 'ru'));
         $this->assertEquals('Message 1', $adapter->translate('Message 1', 'xx'));
         $this->assertEquals('Message 1 (en)', $adapter->translate('Message 1', 'fr_FR'));
+    }
 
-        try {
-            $adapter->addTranslation(__DIR__ . '/_files/translation_en.xliff', 'xx');
-            $this->fail("exception expected");
-        } catch (Translator\Exception\InvalidArgumentException $e) {
-            $this->assertContains('does not exist', $e->getMessage());
-        }
+    public function testLoadTranslationData2()
+    {
+        $adapter = new Adapter\Xliff(__DIR__ . '/_files/translation_en.xliff', 'fr');
+        $this->setExpectedException('Zend\Translator\Exception\InvalidArgumentException');
+        $adapter->addTranslation(__DIR__ . '/_files/translation_en.xliff', 'xx');
+    }
 
+    public function testLoadTranslationData3()
+    {
+        $adapter = new Adapter\Xliff(__DIR__ . '/_files/translation_en.xliff', 'fr');
         $adapter->addTranslation(__DIR__ . '/_files/translation_en2.xliff', 'de', array('clear' => true));
         $this->assertEquals('Nachricht 1', $adapter->translate('Message 1'));
         $this->assertEquals('Message 4', $adapter->translate('Message 4'));
@@ -157,14 +173,18 @@ class XliffTest extends \PHPUnit_Framework_TestCase
         $locale = new Locale\Locale('en');
         $adapter->setLocale($locale);
         $this->assertEquals('en', $adapter->getLocale());
+    }
 
-        try {
-            $adapter->setLocale('nolocale');
-            $this->fail("exception expected");
-        } catch (Translator\Exception\InvalidArgumentException $e) {
-            $this->assertContains('does not exist', $e->getMessage());
-        }
+    public function testLocale2()
+    {
+        $adapter = new Adapter\Xliff(__DIR__ . '/_files/translation_en.xliff', 'en');
+        $this->setExpectedException('Zend\Translator\Exception\InvalidArgumentException');
+        $adapter->setLocale('nolocale');
+    }
 
+    public function testLocale3()
+    {
+        $adapter = new Adapter\Xliff(__DIR__ . '/_files/translation_en.xliff', 'en');
         set_error_handler(array($this, 'errorHandlerIgnore'));
         $adapter->setLocale('it');
         restore_error_handler();

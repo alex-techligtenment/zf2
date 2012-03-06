@@ -2,62 +2,105 @@ Welcome to the Zend Framework 2.0.0 Release!
 
 RELEASE INFORMATION
 ---------------
-Zend Framework 2.0.0dev4
+Zend Framework 2.0.0beta3
 
 THIS RELEASE IS A DEVELOPMENT RELEASE AND NOT INTENDED FOR PRODUCTION USE.
 PLEASE USE AT YOUR OWN RISK.
 
-NEW FEATURES
-------------
+This is the third in a series of planned beta releases. The beta release
+cycle will follow the "gmail" style of betas, whereby new features will
+be added in each new release, and BC will not be guaranteed; beta
+releases will happen approximately every six weeks. 
 
-This snapshot includes:
+Once the established milestones have been reached and the featureset has
+reached maturity and reasonable stability, we will freeze the API and
+prepare for Release Candidate status.
 
- - The "Dispatchable" and related interfaces (Zend\Stdlib\Dispatchable,
-   MessageDescription, RequestDescription, and ResponseDescription)
+NEW FEATURES IN BETA3
+---------------------
 
- - A fully refactored HTTP component
-   - Rewritten URI component, with better and more extensible support
-     for an array of different URI schemas, as well as more flexible
-     path and parameter decomposition and serialization.
+- Refactored Config component (Ben Scholzen, Artur Bodera, Enrico Zimuel, Evan Coury)
+  - All readers moved under Zend\Config\Reader
+    - JSON and YAML readers removed until beta4
+    - New API: 
+      $xml = new Zend\Config\Reader\Xml(); 
+      $config = new Zend\Config\Config($xml->fromFile($filename);
 
-   - Adds HTTP versions of the Stdlib Request and Response interfaces,
-     along with full-fledged support for standard HTTP headers.
+      or:
+      $xml     = new Zend\Config\Reader\Xml(); 
+      $config = $xml->fromFile($filename, true);
 
-   - A rewritten HTTP client that consumes Http\Request objects and
-     produces Http\Response objects.
+      or, simpler:
+      $config = Zend\Config\Factory::fromFile($filename);
+    - All constant injection removed from readers
+      - New Processor API allows processing the retrieved configuration to do
+        optional injection/manipulation of configuration values.
+    - Ability to import other configuration files within a configuration file
+      added.
+  - Factory added, to simplify retrieving configuration from any configuration
+    format supported.
+- New View layer (Matthew Weier O'Phinney)
+  - View layer is now:
+    - Models, for aggregating and representing data to render; models may be
+      nested to represent complex view hierarchies
+    - Renderers, which render templates, using either variables provided or
+      Models
+    - Resolvers, which resolve template names to resources a renderer may
+      consume
+    - View, which allows attaching strategies for determining the renderer to
+      use, as well as how to inject the response when done.
+  - Old Zend_View is now Zend\View\Renderer\PhpRenderer
+    - Composes a Resolver, a PluginBroker (for helpers), a Variables container
+      (for aggregating variables to pass to the view script), and a FilterChain
+      (for output filtering). 
+    - render() now accepts View\Models
+    - allows rendering stacks of templates under the same variable scope, via
+      the addTemplate() mechanism
+    - moves escaping to an Escape view helper; no auto-escaping is enabled
+  - MVC integration
+    - Strategy listeners for:
+      - Handling and returning 404 pages
+      - Handling and returning error pages due to exceptions
+      - RAD support for creation and injection of view models from action
+        controller return values
+    - Addition of a "render" event, executing after "dispatch" and before
+      "finish"
+- New Db layer (Ralph Schindler)
+  - Complete rewrite from the ground up.
+  - New architecture features low-level drivers, which also provide access to
+    the PHP resource being consumed; adapters, which provide basic abstraction
+    for common CRUD operations; new SQL abstraction layer, with full predicate
+    support; abstraction for ResultSet's, with the ability to cast rows to
+    specific object types; abstraction for SQL metadata; and a revised Table and
+    Row Data Gateway.
+- New Zend\Service\AgileZen component (Enrico Zimuel)
+  - Support for the full AgileZen (http://www.agilezen.com) API
+  - Developed for use with http://framework.zend.com/zf2/board 
+- PHP 5.4 support
+  - A number of issues when running ZF2 under PHP 5.4 were identified and
+    corrected.
+- Other components that received attention:
+  - Zend\GData (Maks3w)
+  - Zend\Navigation (Kyle Spraggs, Frank Brückner)
+  - Zend\Session (Mike Willbanks)
+  - Zend\Service\Technorati (Maks3w)
+  - Zend\Service\StrikeIron (Maks3w)
+  - Zend\Service\Twitter (Maks3w)
+  - Zend\Http\Header\Accept* (Matthew Weier O'Phinney, Enrico Zimuel)
+    - Adds support for q priority, level identifiers, and wildcard media and
+      submedia types
+  - Zend\Ldap (Maks3w, Stefah Gehrig)
+  - Zend\Oauth (bakura10)
+  - Zend\Mvc and Zend\Module (Evan Coury, many others)
 
-   - Two additional HTTP client implementations that provide a
-     convenience API around the base HTTP client. One is static, and
-     allows for simple one-off requests:
-
-         $response = ClientStatic::get($uri);
-         $response = ClientStatic::post(
-            $uri, 
-            array('foo' => 'bar'), 
-            array('Content-Type' => ClientStatic::ENC_URENCODED)
-         );
-
-     The other largely mimics the Zend Framework 1.X HTTP client, and
-     proxies functionality to the Request object when appropriate.
-
- - Updated all docbook sources to DocBook 5 formatting standards.
-
- - Merging of more than 50 pull requests made by community members,
-   ranging from one-liner documentation changes to sweeping fixes to the
-   testing repository (including fixing most assertions deprecated in
-   PHPUnit 3.5.0).
-
-We will be refactoring all components using the HTTP client in an
-upcoming milestone to ensure they continue to work, and will also
-post a blog entry and documentation page containing tips.
-
-This snapshot should NOT be used in production, as it is considered
-pre-pre alpha quality.
+Around 200 pull requests for a variety of features and bugfixes were handled
+since beta2.
 
 SYSTEM REQUIREMENTS
 -------------------
 
-Zend Framework 2 requires PHP 5.3 or later. 
+Zend Framework 2 requires PHP 5.3.3 or later; we recommend using the
+latest PHP version whenever possible.
 
 INSTALLATION
 ------------
@@ -67,8 +110,7 @@ Please see INSTALL.txt.
 CONTRIBUTING
 ------------
 
-If you wish to contribute to Zend Framework 2.0, please make sure you have
-signed a CLA (http://framework.zend.com/cla), and please read both the
+If you wish to contribute to Zend Framework 2.0, please read both the
 README-DEV.txt and README-GIT.txt file.
 
 QUESTIONS AND FEEDBACK

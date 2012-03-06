@@ -15,7 +15,7 @@
  * @category   Zend
  * @package    Zend_View
  * @subpackage UnitTests
- * @copyright  Copyright (c) 2005-2011 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2012 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
  */
 
@@ -25,7 +25,7 @@
 namespace ZendTest\View\Helper;
 use Zend\Registry,
     Zend\View\Helper\Placeholder\Registry as PlaceholderRegistry,
-    Zend\View\PhpRenderer as View,
+    Zend\View\Renderer\PhpRenderer as View,
     Zend\View\Helper,
     Zend\View\Exception as ViewException;
 
@@ -35,7 +35,7 @@ use Zend\Registry,
  * @category   Zend
  * @package    Zend_View
  * @subpackage UnitTests
- * @copyright  Copyright (c) 2005-2011 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2012 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
  * @group      Zend_View
  * @group      Zend_View_Helper
@@ -69,7 +69,7 @@ class HeadMetaTest extends \PHPUnit_Framework_TestCase
         }
         $this->basePath = __DIR__ . '/_files/modules';
         $this->view     = new View();
-        $this->view->plugin('doctype')->direct('XHTML1_STRICT');
+        $this->view->plugin('doctype')->__invoke('XHTML1_STRICT');
         $this->helper   = new Helper\HeadMeta();
         $this->helper->setView($this->view);
     }
@@ -103,7 +103,7 @@ class HeadMetaTest extends \PHPUnit_Framework_TestCase
 
     public function testHeadMetaReturnsObjectInstance()
     {
-        $placeholder = $this->helper->direct();
+        $placeholder = $this->helper->__invoke();
         $this->assertTrue($placeholder instanceof Helper\HeadMeta);
     }
 
@@ -286,7 +286,7 @@ class HeadMetaTest extends \PHPUnit_Framework_TestCase
      */
     public function testToStringWhenInvalidKeyProvidedShouldConvertThrownException()
     {
-        $this->helper->direct('some-content', 'tag value', 'not allowed key');
+        $this->helper->__invoke('some-content', 'tag value', 'not allowed key');
         set_error_handler(array($this, 'handleErrors'));
         $string = @$this->helper->toString();
         $this->assertEquals('', $string);
@@ -295,7 +295,7 @@ class HeadMetaTest extends \PHPUnit_Framework_TestCase
 
     public function testHeadMetaHelperCreatesItemEntry()
     {
-        $this->helper->direct('foo', 'keywords');
+        $this->helper->__invoke('foo', 'keywords');
         $values = $this->helper->getArrayCopy();
         $this->assertEquals(1, count($values));
         $item = array_shift($values);
@@ -329,8 +329,8 @@ class HeadMetaTest extends \PHPUnit_Framework_TestCase
 
     public function testStringRepresentationReflectsDoctype()
     {
-        $this->view->plugin('doctype')->direct('HTML4_STRICT');
-        $this->helper->direct('some content', 'foo');
+        $this->view->plugin('doctype')->__invoke('HTML4_STRICT');
+        $this->helper->__invoke('some content', 'foo');
         $test = $this->helper->toString();
         $this->assertNotContains('/>', $test);
         $this->assertContains('some content', $test);
@@ -380,7 +380,7 @@ class HeadMetaTest extends \PHPUnit_Framework_TestCase
     {
         $view = new View();
         $view->plugin('headMeta')->setName('keywords', 'foo');
-        $view->plugin('headMeta')->direct('some content', 'bar', 'name', array(), \Zend\View\Helper\Placeholder\Container\AbstractContainer::PREPEND);
+        $view->plugin('headMeta')->__invoke('some content', 'bar', 'name', array(), \Zend\View\Helper\Placeholder\Container\AbstractContainer::PREPEND);
 
         $this->assertEquals(
             '<meta name="bar" content="some content" />' . PHP_EOL . '<meta name="keywords" content="foo" />',
@@ -415,7 +415,7 @@ class HeadMetaTest extends \PHPUnit_Framework_TestCase
 	public function testCharsetValidateFail()
 	{
 		$view = new View();
-		$view->plugin('doctype')->direct('HTML4_STRICT');
+		$view->plugin('doctype')->__invoke('HTML4_STRICT');
 
         $this->setExpectedException('Zend\View\Exception');
         $view->plugin('headMeta')->setCharset('utf-8');
@@ -427,19 +427,30 @@ class HeadMetaTest extends \PHPUnit_Framework_TestCase
     public function testCharset() 
     {
 		$view = new View();
-		$view->plugin('doctype')->direct('HTML5');
+		$view->plugin('doctype')->__invoke('HTML5');
 
 		$view->plugin('headMeta')->setCharset('utf-8');
 		$this->assertEquals(
 			'<meta charset="utf-8">',
 			$view->plugin('headMeta')->toString());
 
-		$view->plugin('doctype')->direct('XHTML5');
+		$view->plugin('doctype')->__invoke('XHTML5');
 
 		$this->assertEquals(
 			'<meta charset="utf-8"/>',
 			$view->plugin('headMeta')->toString());
 	}
+
+    /**
+     * @group ZF-11835
+     */
+    public function testConditional() 
+    {
+        $html = $this->helper->appendHttpEquiv('foo', 'bar', array('conditional' => 'lt IE 7'))->toString();
+        
+        $this->assertRegExp("|^<!--\[if lt IE 7\]>|", $html);
+        $this->assertRegExp("|<!\[endif\]-->$|", $html);
+    }
 
 }
 

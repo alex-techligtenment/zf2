@@ -15,7 +15,7 @@
  * @category   Zend
  * @package    Zend_Form
  * @subpackage Decorator
- * @copyright  Copyright (c) 2005-2011 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2012 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
  */
 
@@ -35,7 +35,7 @@ use Zend\Form\Decorator\AbstractDecorator;
  * @category   Zend
  * @package    Zend_Form
  * @subpackage Element
- * @copyright  Copyright (c) 2005-2011 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2012 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
  */
 class Word extends AbstractDecorator
@@ -67,8 +67,8 @@ class Word extends AbstractDecorator
         $placement = $this->getPlacement();
         $separator = $this->getSeparator();
 
-        $hidden = $view->plugin('formHidden')->direct($hiddenName, $element->getValue(), $element->getAttribs());
-        $text   = $view->plugin('formText')->direct($textName, '', $element->getAttribs());
+        $hidden = $view->formHidden($hiddenName, $element->getValue(), $element->getAttribs());
+        $text   = $view->formText($textName, '', $element->getAttribs());
         switch ($placement) {
             case 'PREPEND':
                 $content = $hidden . $separator . $text . $separator . $content;

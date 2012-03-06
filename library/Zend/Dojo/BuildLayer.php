@@ -14,7 +14,7 @@
  *
  * @category   Zend
  * @package    Zend_Dojo
- * @copyright  Copyright (c) 2005-2011 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2012 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
  */
 
@@ -32,7 +32,7 @@ use Zend\Config\Config,
  *
  * @uses       \Zend\Json\Json
  * @package    Zend_Dojo
- * @copyright  Copyright (c) 2005-2011 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2012 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
  */
 class BuildLayer
@@ -183,7 +183,8 @@ class BuildLayer
             if (null === ($view = $this->getView())) {
                 throw new Exception\RuntimeException('View object not registered; cannot retrieve dojo helper');
             }
-            $this->setDojoHelper($view->plugin('dojo')->direct());
+            $dojo = $view->plugin('dojo');
+            $this->setDojoHelper($dojo());
         }
         return $this->_dojo;
     }

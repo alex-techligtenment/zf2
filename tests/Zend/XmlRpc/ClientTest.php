@@ -15,7 +15,7 @@
  * @category   Zend
  * @package    Zend_XmlRpc
  * @subpackage UnitTests
- * @copyright  Copyright (c) 2005-2011 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2012 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
  */
 
@@ -26,17 +26,19 @@ namespace ZendTest\XmlRpc;
 
 use Zend\Http\Client\Adapter,
     Zend\Http,
+    Zend\Http\Request as HttpRequest,
+    Zend\Http\Response as HttpResponse,
     Zend\XmlRpc\Client,
     Zend\XmlRpc\Value,
     Zend\XmlRpc;
 
 /**
- * Test case for Zend_XmlRpc_Value
+ * Test case for Zend\XmlRpc\Client
  *
  * @category   Zend
  * @package    Zend_XmlRpc
  * @subpackage UnitTests
- * @copyright  Copyright (c) 2005-2011 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2012 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
  * @group      Zend_XmlRpc
  */
@@ -290,12 +292,9 @@ class ClientTest extends \PHPUnit_Framework_TestCase
 
     public function testSkipsSystemCallWhenDirected()
     {
-        $this->mockHttpClient();
-        $this->mockedHttpClient->expects($this->once())
-                               ->method('request')
-                               ->with('POST')
-                               ->will($this->returnValue($this->makeHttpResponseFor('foo')));
-        $this->xmlrpcClient->setHttpClient($this->mockedHttpClient);
+        $httpAdapter = $this->httpAdapter;
+        $response    = $this->makeHttpResponseFor('foo');
+        $httpAdapter->setResponse($response);
         $this->xmlrpcClient->setSkipSystemLookup(true);
         $this->assertSame('foo', $this->xmlrpcClient->call('test.method'));
     }
@@ -552,50 +551,17 @@ class ClientTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals('system.multicall', $request->getMethod());
     }
 
-    public function testGettingAllMethodSignaturesDegradesToLooping()
-    {
-        // system.listMethods() will return ['foo', 'bar']
-        $whatListMethodsReturns = array('foo', 'bar');
-        $response = $this->getServerResponseFor($whatListMethodsReturns);
-        $this->httpAdapter->setResponse($response);
-
-        // system.multicall() will return a fault
-        $fault = new XmlRpc\Fault(7, 'bad method');
-        $xml = $fault->saveXml();
-        $response = $this->makeHttpResponseFrom($xml);
-        $this->httpAdapter->addResponse($response);
-
-        // system.methodSignature('foo') will return [['int'], ['int', 'string']]
-        $fooSignatures = array(array('int'), array('int', 'string'));
-        $response = $this->getServerResponseFor($fooSignatures);
-        $this->httpAdapter->addResponse($response);
-
-        // system.methodSignature('bar') will return [['boolean']]
-        $barSignatures = array(array('boolean'));
-        $response = $this->getServerResponseFor($barSignatures);
-        $this->httpAdapter->addResponse($response);
-
-        $i = $this->xmlrpcClient->getIntrospector();
-
-        $expected = array('foo' => $fooSignatures,
-                          'bar' => $barSignatures);
-        $this->assertEquals($expected, $i->getSignatureForEachMethod());
-
-        $request = $this->xmlrpcClient->getLastRequest();
-        $this->assertEquals('system.methodSignature', $request->getMethod());
-    }
-
     /**
      * @group ZF-4372
      */
     public function testSettingUriOnHttpClientIsNotOverwrittenByXmlRpcClient()
     {
-        $changedUri = "http://bar:80";
+        $changedUri = 'http://bar:80';
         // Overwrite: http://foo:80
         $this->setServerResponseTo(array());
         $this->xmlrpcClient->getHttpClient()->setUri($changedUri);
-        $this->xmlrpcClient->call("foo");
-        $uri = $this->xmlrpcClient->getHttpClient()->getUri(true);
+        $this->xmlrpcClient->call('foo');
+        $uri = $this->xmlrpcClient->getHttpClient()->getUri()->toString();
 
         $this->assertEquals($changedUri, $uri);
     }
@@ -605,7 +571,7 @@ class ClientTest extends \PHPUnit_Framework_TestCase
      */
     public function testSettingNoHttpClientUriForcesClientToSetUri()
     {
-        $baseUri = "http://foo:80";
+        $baseUri = 'http://foo:80';
         $this->httpAdapter = new Adapter\Test();
         $this->httpClient = new Http\Client(null, array('adapter' => $this->httpAdapter));
 
@@ -613,11 +579,11 @@ class ClientTest extends \PHPUnit_Framework_TestCase
         $this->xmlrpcClient->setHttpClient($this->httpClient);
 
         $this->setServerResponseTo(array());
-        $this->assertNull($this->xmlrpcClient->getHttpClient()->getUri());
-        $this->xmlrpcClient->call("foo");
-        $uri = $this->xmlrpcClient->getHttpClient()->getUri(true);
+        $this->assertNull($this->xmlrpcClient->getHttpClient()->getRequest()->getUri());
+        $this->xmlrpcClient->call('foo');
+        $uri = $this->xmlrpcClient->getHttpClient()->getUri();
 
-        $this->assertEquals($baseUri, $uri);
+        $this->assertEquals($baseUri, $uri->toString());
     }
 
     /**
@@ -625,7 +591,7 @@ class ClientTest extends \PHPUnit_Framework_TestCase
      */
     public function testCustomHttpClientUserAgentIsNotOverridden()
     {
-        $this->assertNull(
+        $this->assertFalse(
             $this->httpClient->getHeader('user-agent'),
             'UA is null if no request was made'
         );
@@ -679,7 +645,7 @@ class ClientTest extends \PHPUnit_Framework_TestCase
     {
         $headers = array("HTTP/1.1 $status $message",
                          "Status: $status",
-                         'Content_Type: text/xml; charset=utf-8',
+                         'Content-Type: text/xml; charset=utf-8',
                          'Content-Length: ' . strlen($data)
                          );
         return implode("\r\n", $headers) . "\r\n\r\n$data\r\n\r\n";
@@ -688,7 +654,7 @@ class ClientTest extends \PHPUnit_Framework_TestCase
     public function makeHttpResponseFor($nativeVars)
     {
         $response = $this->getServerResponseFor($nativeVars);
-        return \Zend\Http\Response::fromString($response);
+        return HttpResponse::fromString($response);
     }
 
     public function mockIntrospector()

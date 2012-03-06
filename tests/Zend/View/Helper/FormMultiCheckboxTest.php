@@ -15,7 +15,7 @@
  * @category   Zend
  * @package    Zend_View
  * @subpackage UnitTests
- * @copyright  Copyright (c) 2005-2011 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2012 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
  */
 
@@ -25,7 +25,7 @@
 namespace ZendTest\View\Helper;
 
 use Zend\Registry,
-    Zend\View\PhpRenderer as View,
+    Zend\View\Renderer\PhpRenderer as View,
     Zend\View\Helper\FormMultiCheckbox;
 
 /**
@@ -34,14 +34,14 @@ use Zend\Registry,
  * @category   Zend
  * @package    Zend_View
  * @subpackage UnitTests
- * @copyright  Copyright (c) 2005-2011 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2012 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
  * @group      Zend_View
  * @group      Zend_View_Helper
+ * @outputBuffering enabled
  */
 class FormMultiCheckboxTest extends \PHPUnit_Framework_TestCase
 {
-
     /**
      * Sets up the fixture, for example, open a network connection.
      * This method is called before a test is executed.
@@ -57,18 +57,6 @@ class FormMultiCheckboxTest extends \PHPUnit_Framework_TestCase
         $this->view   = new View();
         $this->helper = new FormMultiCheckbox();
         $this->helper->setView($this->view);
-        ob_start();
-    }
-
-    /**
-     * Tears down the fixture, for example, close a network connection.
-     * This method is called after a test is executed.
-     *
-     * @return void
-     */
-    public function tearDown()
-    {
-        ob_end_clean();
     }
 
     public function testMultiCheckboxHelperRendersLabelledCheckboxesForEachOption()
@@ -78,7 +66,7 @@ class FormMultiCheckboxTest extends \PHPUnit_Framework_TestCase
             'bar' => 'Bar',
             'baz' => 'Baz'
         );
-        $html = $this->helper->direct(array(
+        $html = $this->helper->__invoke(array(
             'name'    => 'foo',
             'value'   => 'bar',
             'options' => $options,
@@ -102,7 +90,7 @@ class FormMultiCheckboxTest extends \PHPUnit_Framework_TestCase
             'bar' => 'Bar',
             'baz' => 'Baz'
         );
-        $html = $this->helper->direct(array(
+        $html = $this->helper->__invoke(array(
             'name'    => 'foo',
             'value'   => 'bar',
             'options' => $options,
@@ -116,15 +104,15 @@ class FormMultiCheckboxTest extends \PHPUnit_Framework_TestCase
         }
     }
 
-    public function testCanRendersAsXHtml()
+    public function testCanRenderAsXHtml()
     {
-        $this->view->plugin('doctype')->direct('XHTML1_STRICT');
+        $this->view->doctype('XHTML1_STRICT');
         $options = array(
             'foo' => 'Foo',
             'bar' => 'Bar',
             'baz' => 'Baz'
         );
-        $html = $this->helper->direct(array(
+        $html = $this->helper->__invoke(array(
             'name'    => 'foo',
             'value'   => 'bar',
             'options' => $options,

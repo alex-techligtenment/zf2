@@ -15,7 +15,7 @@
  * @category   Zend
  * @package    Zend_View
  * @subpackage Helper
- * @copyright  Copyright (c) 2005-2011 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2012 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
  */
 
@@ -31,7 +31,7 @@ namespace Zend\View\Helper;
  * @category   Zend
  * @package    Zend_View
  * @subpackage Helper
- * @copyright  Copyright (c) 2005-2011 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2012 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
  */
 class FormLabel extends FormElement
@@ -44,12 +44,8 @@ class FormLabel extends FormElement
      * @param  array $attribs Form element attributes (used to determine if disabled)
      * @return string The element XHTML.
      */
-    public function direct($name = null, $value = null, array $attribs = null)
+    public function __invoke($name, $value = null, array $attribs = null)
     {
-        if ($name == null) {
-            throw new \InvalidArgumentException('FormLabel: missing argument. $name is required in formLabel($name, $value = null, array $attribs = array())');
-        }
-        
         $info = $this->_getInfo($name, $value, $attribs);
         extract($info); // name, value, attribs, options, listsep, disable, escape
 
@@ -59,10 +55,11 @@ class FormLabel extends FormElement
             return  '';
         }
 
-        $value = ($escape) ? $this->view->vars()->escape($value) : $value;
-        $for   = (empty($attribs['disableFor']) || !$attribs['disableFor'])
-               ? ' for="' . $this->view->vars()->escape($id) . '"'
-               : '';
+        $escaper = $this->view->plugin('escape');
+        $value   = ($escape) ? $escaper($value) : $value;
+        $for     = (empty($attribs['disableFor']) || !$attribs['disableFor'])
+                 ? ' for="' . $escaper($id) . '"'
+                 : '';
         if (array_key_exists('disableFor', $attribs)) {
             unset($attribs['disableFor']);
         }

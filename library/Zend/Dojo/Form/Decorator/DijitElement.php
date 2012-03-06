@@ -14,7 +14,7 @@
  *
  * @category   Zend
  * @package    Zend_Form
- * @copyright  Copyright (c) 2005-2011 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2012 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
  */
 
@@ -43,7 +43,7 @@ use Zend\Form\Decorator\ViewHelper as ViewHelperDecorator,
  * @uses       \Zend\Form\Decorator\ViewHelper
  * @package    Zend_Dojo
  * @subpackage Form_Decorator
- * @copyright  Copyright (c) 2005-2011 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2012 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
  */
 class DijitElement extends ViewHelperDecorator
@@ -185,7 +185,8 @@ class DijitElement extends ViewHelperDecorator
                $options = $attribs['options'];
         }
 
-        $elementContent = $view->plugin($helper)->direct($name, $value, $dijitParams, $attribs, $options);
+        $helper = $view->plugin($helper);
+        $elementContent = $helper($name, $value, $dijitParams, $attribs, $options);
         switch ($this->getPlacement()) {
             case self::APPEND:
                 return $content . $separator . $elementContent;

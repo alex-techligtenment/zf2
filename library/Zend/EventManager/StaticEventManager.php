@@ -14,7 +14,7 @@
  *
  * @category   Zend
  * @package    Zend_EventManager
- * @copyright  Copyright (c) 2005-2011 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2012 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
  */
 
@@ -30,7 +30,7 @@ use Zend\Stdlib\CallbackHandler;
  *
  * @category   Zend
  * @package    Zend_EventManager
- * @copyright  Copyright (c) 2005-2011 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2012 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
  */
 class StaticEventManager implements StaticEventCollection
@@ -67,7 +67,7 @@ class StaticEventManager implements StaticEventCollection
     /**
      * Retrieve instance
      * 
-     * @return EventManager
+     * @return StaticEventManager
      */
     public static function getInstance()
     {
@@ -116,7 +116,7 @@ class StaticEventManager implements StaticEventCollection
      * @param  int $priority Priority at which listener should execute
      * @return void
      */
-    public function attach($id, $event, $callback, $priority = 1000)
+    public function attach($id, $event, $callback, $priority = 1)
     {
         $ids = (array) $id;
         foreach ($ids as $id) {
