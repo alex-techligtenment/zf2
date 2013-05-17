@@ -47,6 +47,8 @@ class Memcached extends AbstractBackend implements ExtendedBackend
     const DEFAULT_RETRY_INTERVAL = 15;
     const DEFAULT_STATUS = true;
     const DEFAULT_FAILURE_CALLBACK = null;
+	const TAG_PREFIX = "Alchemy::Tag::";
+	const TAG_LIFETIME = 3600;
 
     /**
      * Log message
@@ -220,8 +222,15 @@ class Memcached extends AbstractBackend implements ExtendedBackend
         $result = @$this->_memcache->set($id, array($data, time(), $lifetime), $flag, $lifetime);
 
         if (count($tags) > 0) {
-            $this->_log(self::TAGS_UNSUPPORTED_BY_SAVE_OF_MEMCACHED_BACKEND);
-        }
+			foreach ($tags as $tag) {
+				$eTag = $this->_memcache->get(self::TAG_PREFIX . $tag);
+				if (!is_array($eTag)) {
+					$eTag = array();
+				}
+				$eTag[] = $id;
+				$this->_memcache->set(self::TAG_PREFIX . $tag, $eTag, 0, self::TAG_LIFETIME);
+			}
+		}
 
         return $result;
     }
@@ -262,13 +271,26 @@ class Memcached extends AbstractBackend implements ExtendedBackend
                 $this->_log("Zend_Cache_Backend_Memcached::clean() : CLEANING_MODE_OLD is unsupported by the Memcached backend");
                 break;
             case Cache\Cache::CLEANING_MODE_MATCHING_TAG:
+				$keysToClear = $this->getIdsMatchingTags($tags);
+				$flag = true;
+				foreach($keysToClear as $key) {
+					if (!$this->_memcache->delete($key)) {
+						$flag = false;
+					}
+				}
+				foreach ($tags as $tag) {
+					$this->_memcache->delete(self::TAG_PREFIX . $tag);
+				}
+				return $flag;
             case Cache\Cache::CLEANING_MODE_NOT_MATCHING_TAG:
+				$this->_log("Zend_Cache_Backend_Memcached::clean() : CLEANING_MODE_NOT_MATCHING_TAG is unsupported by the Memcached backend");
+				break;
             case Cache\Cache::CLEANING_MODE_MATCHING_ANY_TAG:
-                $this->_log(self::TAGS_UNSUPPORTED_BY_CLEAN_OF_MEMCACHED_BACKEND);
+                $this->_log("Zend_Cache_Backend_Memcached::clean() : CLEANING_MODE_MATCHING_ANY_TAG is unsupported by the Memcached backend");
                 break;
-               default:
-                Cache\Cache::throwException('Invalid mode for clean() method');
-                   break;
+			default:
+			 Cache\Cache::throwException('Invalid mode for clean() method');
+				break;
         }
     }
 
@@ -335,8 +357,14 @@ class Memcached extends AbstractBackend implements ExtendedBackend
      */
     public function getIdsMatchingTags($tags = array())
     {
-        $this->_log(self::TAGS_UNSUPPORTED_BY_SAVE_OF_MEMCACHED_BACKEND);
-        return array();
+		$matches = array();
+        foreach ($tags as $tag) {
+			$res = $this->_memcache->get(self::TAG_PREFIX.$tag);
+			if (is_array($res)) {
+				$matches = array_merge($matches, $res);
+			}
+		}
+		return $matches;
     }
 
     /**
@@ -489,12 +517,11 @@ class Memcached extends AbstractBackend implements ExtendedBackend
     {
         return array(
             'automatic_cleaning' => false,
-            'tags' => false,
+            'tags' => true,
             'expired_read' => false,
             'priority' => false,
             'infinite_lifetime' => false,
             'get_list' => false
         );
     }
-
 }
