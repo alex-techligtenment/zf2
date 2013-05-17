@@ -281,7 +281,7 @@ class Memcached extends AbstractBackend implements ExtendedBackend
 				foreach ($tags as $tag) {
 					$this->_memcache->delete(self::TAG_PREFIX . $tag);
 				}
-				break;
+				return $flag;
             case Cache\Cache::CLEANING_MODE_NOT_MATCHING_TAG:
 				$this->_log("Zend_Cache_Backend_Memcached::clean() : CLEANING_MODE_NOT_MATCHING_TAG is unsupported by the Memcached backend");
 				break;
