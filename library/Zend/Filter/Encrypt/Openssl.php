@@ -107,7 +107,7 @@ class Openssl implements EncryptionAlgorithm
 
         if (array_key_exists('compression', $options)) {
             $this->setCompression($options['compression']);
-            unset($options['compress']);
+            unset($options['compression']);
         }
 
         if (array_key_exists('package', $options)) {
