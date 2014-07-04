@@ -143,19 +143,33 @@ class Cldr extends AbstractLocale
      */
     private static function _findRoute($locale, $path, $attribute, $value, &$temp)
     {
-        // load locale file if not already in cache
+		// load locale file if not already in cache
         // needed for alias tag when referring to other locale
         if (empty(self::$_ldml[(string) $locale])) {
-            $filename = __DIR__ . '/' . self::$_path . $locale . '.xml';
-            if (!file_exists($filename)) {
-                throw new InvalidArgumentException(
-                  "Missing locale file '$filename'"
+			
+			// fix for a zf bug (ZF2-316) - try one more path before throwing the exception
+			// as we have in logs
+			// Missing locale file '/srv/www/alchemy2/vendor/zf2/library/Zend/Locale/Data/zh_Hant_HK.xml
+			// is missing the main/ bit
+            $filename1 = __DIR__ . '/' . self::$_path . $locale . '.xml';
+			$filename2 = __DIR__ . '/' . self::$_path . 'main/' . $locale . '.xml';
+			$filename3 = self::getPath() . '/' . $locale . '.xml';
+			
+            if (file_exists($filename1)) {
+				$filename = $filename1;
+            } else if (file_exists($filename2)) {
+				$filename = $filename2;
+			} else if (file_exists($filename3)) {
+				$filename = $filename3;
+			} else {
+				throw new InvalidArgumentException(
+                  "Missing locale file '$filename1' or '$filename2' or '$filename3'."
                 );
-            }
+			}
 
             self::$_ldml[(string) $locale] = simplexml_load_file($filename);
         }
-
+		
         // search for 'alias' tag in the search path for redirection
         $search = '';
         $tok = strtok($path, '/');
