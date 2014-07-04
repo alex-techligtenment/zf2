@@ -144,9 +144,18 @@ class Cldr extends AbstractLocale
         if (empty(self::$_ldml[(string) $locale])) {
             $filename = self::getPath() . '/' . $locale . '.xml';
             if (!file_exists($filename)) {
-                throw new InvalidArgumentException(
-                  "Missing locale file '$filename'"
-                );
+				
+                // fix for a zf bug (ZF2-316) - try one more path before throwing the exception
+				// as we have in logs
+				// Missing locale file '/srv/www/alchemy2/vendor/zf2/library/Zend/Locale/Data/zh_Hant_HK.xml
+				// is missing the main/ bit
+				$firstAttempt = $filename;
+				$filename = __DIR__ . '/' . self::$_path . 'main/' . $locale . '.xml';
+				if (!file_exists($filename)) {
+					throw new InvalidArgumentException(
+						"Missing locale file '$firstAttempt' or '$filename'"
+					);
+				}
             }
 
             self::$_ldml[(string) $locale] = simplexml_load_file($filename);
